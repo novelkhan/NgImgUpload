@@ -15,12 +15,16 @@ export class PersonService {
     return this.http.get<Person[]>(`${environment.personApiBaseUrl}/person`);
   }
 
+  getFileAsync(id:number): Observable<Blob> {
+    return this.http.get(`${environment.personApiBaseUrl}/person/file/`+ id, {responseType: 'blob'});
+  }
+
   addPerson(person: any): Observable<void> {
     return this.http.post<void>(`${environment.personApiBaseUrl}/person`, person);
   }
 
   getPersonById(id: number): Observable<Person> {
-    return this.http.get<Person>(`${environment.personApiBaseUrl}/person/`+ id);
+    return this.http.get<Person>(`${environment.personApiBaseUrl}/person/`+ id, );
   }
 
   updatePerson(id: number, person: Person) : Observable<Person> {
