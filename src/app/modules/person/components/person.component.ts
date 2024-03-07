@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Person } from '../models/person.model';
 import { PersonService } from '../services/person.service';
-import FileSaver from 'file-saver';
 import { HttpClient } from '@angular/common/http';
+// import FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-person',
@@ -202,8 +202,13 @@ export class PersonComponent implements OnInit{
       const blob = new Blob([memoryStream], { type: contentType }); // you can change the type
       // const url= window.URL.createObjectURL(blob);
       // window.open(url);
-      FileSaver.saveAs(blob, filename);
+      // FileSaver.saveAs(blob, filename);
       //console.log("Success");
+
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
     });
   }
 }
