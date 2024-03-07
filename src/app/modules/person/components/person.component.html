@@ -17,6 +17,7 @@
             <th>File Name</th>
             <th>File Type</th>
             <th>Image</th>
+            <th>Size</th>
             <th></th>
           </tr>
         </thead>
@@ -28,6 +29,7 @@
             <td>{{person.filename}}</td>
             <td>{{person.type}}</td>
             <td><img src={{person.image}} alt={{person.filename}} width="100" height="50"></td>
+            <td>{{person.size}}</td>
             <td>
               <input type="button" class="btn btn-success" (click)="DownloadFile(person.id, person.type, person.filename)" value="Download"/>
             </td>

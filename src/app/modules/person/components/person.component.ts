@@ -104,6 +104,7 @@ export class PersonComponent implements OnInit{
               filename : record.filename,
               image : src,
               type : record.filetype,
+              size : record.filesize,
               blob : blobFile,
               url : blobUrl
            };
