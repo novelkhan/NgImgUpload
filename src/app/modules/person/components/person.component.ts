@@ -57,6 +57,13 @@ export class PersonComponent implements OnInit{
 
 
 
+        // const byteData = new Uint8Array(record.filebytes);
+        // const bloob = new Blob([byteData], { type: record.filetype });
+        // const bloburl = window.URL.createObjectURL(bloob);
+        // window.open(bloburl);
+
+
+
         
         var src = 'data:image/jpeg;base64,' + record.filebytes;
         // const bblob = new Blob([record.filebytes], {type : 'image/jpeg'}); // you can change the type
