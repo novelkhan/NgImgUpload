@@ -3,6 +3,11 @@ import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
 import { NotFoundComponent } from './components/not-found/not-found.component';
 
+
+//  (BootStrap-5 Installation Guide Link- https://www.youtube.com/watch?v=TIGy3VYsG5g )
+
+
+
 const routes: Routes = [
   {path: '', component: HomeComponent},
   // Implementing lazy loading for Person module by following format
