@@ -9,7 +9,8 @@ import { NotFoundComponent } from './components/not-found/not-found.component';
 
 
 const routes: Routes = [
-  {path: '', component: HomeComponent},
+  {path:'', loadChildren: () => import('./modules/person/person.module').then(module => module.PersonModule)},
+  // {path: '', component: HomeComponent},
   // Implementing lazy loading for Person module by following format
   {path:'person', loadChildren: () => import('./modules/person/person.module').then(module => module.PersonModule)},
   // Implementing lazy loading for Man module by following format
