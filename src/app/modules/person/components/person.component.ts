@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Person } from '../models/person.model';
 import { PersonService } from '../services/person.service';
 import { HttpClient } from '@angular/common/http';
-// import FileSaver from 'file-saver';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-person',
@@ -16,7 +15,7 @@ export class PersonComponent implements OnInit{
   persons : any[] = [];
   // persons2 : any[] = [];
 
-  constructor(private personService: PersonService, private http: HttpClient) {
+  constructor(private personService: PersonService, private http: HttpClient, private sanitizer: DomSanitizer) {
   }
 
   ngOnInit(): void {
@@ -50,6 +49,12 @@ export class PersonComponent implements OnInit{
     // console.log(this.persons2);
 
 
+    this.loadPerson();
+  }
+
+
+
+  loadPerson():void {
     this.personService.getAllPersons().subscribe(records => {
       records.forEach(record => {
         // const bblob = new Blob([record.filebytes]); // you can change the type
@@ -99,7 +104,9 @@ export class PersonComponent implements OnInit{
 
         let memoryStream:any = this.getFileMemoryStream(record.id as number);
         const blobFile = new Blob([memoryStream], {type : record.filetype});
-        const blobUrl = window.URL.createObjectURL(blobFile);
+        //const blobUrl = window.URL.createObjectURL(blobFile);
+
+        const blobUrl = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blobFile));
         
 
 
@@ -123,6 +130,11 @@ export class PersonComponent implements OnInit{
     });
     console.log(this.persons);
   }
+
+
+
+
+
 
 // getBlob(id:number, contentType:string):any {
 //   // var obs = this.personService.getFileAsync(id);
@@ -219,4 +231,25 @@ export class PersonComponent implements OnInit{
       link.click();
     });
   }
+
+
+
+
+
+
+
+
+
+
+
+  onDirectDelete(id: number): void {        /* Solution here- https://chatgpt.com/c/1d0b8798-e9ed-4277-8db9-f846a49c464a */
+    if (id) {
+      this.personService.deletePerson(id)
+        .subscribe(() => {
+          this.persons = this.persons.filter(person => person.id !== id);
+        });
+    }
+  }
+
+
 }
