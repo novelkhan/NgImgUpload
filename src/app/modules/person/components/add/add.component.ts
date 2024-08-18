@@ -29,6 +29,17 @@ export class AddComponent implements OnDestroy{
 
   onFormSubmit() {
     let file:File = this.fileInput.nativeElement.files[0];
+
+
+
+    // Check if the file size exceeds 6KB (6 * 1024 bytes)
+    const maxSizeInKB = 6;
+    if (file && file.size > maxSizeInKB * 1024) {
+      alert('File size exceeds the maximum limit of 6KB. Please choose a smaller file.');
+      return; // Stop form submission
+    }
+
+
     
 
     const formData: FormData = new FormData();
