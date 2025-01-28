@@ -8,92 +8,91 @@ import { ManService } from '../../services/man.service';
 @Component({
   selector: 'app-add-man',
   templateUrl: './add-man.component.html',
-  styleUrl: './add-man.component.scss'
+  styleUrls: ['./add-man.component.scss'] // Fixed typo here
 })
-export class AddManComponent implements OnDestroy{
+export class AddManComponent implements OnDestroy {
 
-  @ViewChild('fileInput') fileInput: any;
+  // @ViewChild('fileInput') fileInput: any;
+  @ViewChild('fileInput', { static: false }) fileInput: any;
+
 
   manForm = new FormGroup({
-    name: new FormControl('')
+    name: new FormControl('') // A form control for the name
   });
 
-  
-  private addPersonSubscribtion?: Subscription;
-  // base64: any;
-  bytesarray: any;
+  private addManSubscription?: Subscription;
+  base64String: any; // Directly using Uint8Array
+  fileName: string = ''; // Default to empty string if undefined
+  fileType: string = ''; // Default to empty string if undefined
 
-  constructor(private manService: ManService,
-    private router: Router) {}
-
-
+  constructor(private manService: ManService, private router: Router) {}
 
   onFormSubmit() {
-    let file:File = this.fileInput.nativeElement.files[0];
-    // let filereader:FileReader = new FileReader();
-    // filereader.onload = (e) =>{
-    //   // this.base64 = filereader.result
-    //   this.bytesarray = this.convertDataURIToBinary(filereader.result)
-    // }
-    // filereader.readAsDataURL(file);
-
-    // console.log(this.base64);
-    // this.bytearray = this.convertDataURIToBinary(this.base64)
-
-    // var p = Array.from(this.bytearray);
-    // var p = [].slice.call(this.bytearray);
-
-
-    const reader = new FileReader();
-
-    reader.onload = (event: any) => {
-      const byteArray = new Uint8Array(event.target.result);
-      this.bytesarray = byteArray;
-      console.log('Byte array:', byteArray);
-      
-      // You can now use 'byteArray' as needed (e.g., send it to an API)
+    // Ensure the payload for the backend
+    const man: Man = {
+      name: this.manForm.value.name as string, // Use the form value
+      filename: this.fileName, // Ensure fileName is always a string (fallback to empty string)
+      filetype: this.fileType,
+      base64string: this.base64String
     };
 
-    reader.readAsArrayBuffer(file);
+    //console.log('Payload to send:', JSON.stringify(man));
 
-
-    let man: Man = {
-      name: (this.manForm.value.name) as string,
-      imagebytes: this.bytesarray
-      // picturebyte: ((this.fileInput.nativeElement.files[0])?.ArrayBuffer()) as ArrayBuffer
-    }
-    
-    this.addPersonSubscribtion = this.manService.addMan(man)
-    .subscribe({
+    // Make the API call
+    this.addManSubscription = this.manService.addMan(man).subscribe({
       next: (response) => {
-        this.router.navigateByUrl('/man');
+        console.log('Response:', response);
+        this.router.navigateByUrl('/man'); // Navigate on success
+      },
+      error: (error) => {
+        console.error('Error occurred:', error);
       }
     });
+    
+  }
+
+  async onFileSelected() {
+    const file: File = this.fileInput.nativeElement.files[0];
+    if (file) {
+      this.fileName = file.name; // Set file name
+      this.fileType = file.type;
+      this.base64String = await this.fileToBase64String(file);
+      /* const reader = new FileReader();
+      reader.onload = (event: any) => {
+        this.base64String = (reader.result as string).split(',')[1];
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+      };
+      reader.readAsDataURL(file); */
+    }
   }
 
 
 
 
-//  convertDataURIToBinary(dataURI: any):any {
-//     var base64Index = dataURI.indexOf(';base64,') + ';base64,'.length;
-//     var base64 = dataURI.substring(base64Index);
-//     var raw = window.atob(base64);
-//     var rawLength = raw.length;
-//     var array = new Uint8Array(new ArrayBuffer(rawLength));
+  fileToBase64String(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
   
-//     for(let i = 0; i < rawLength; i++) {
-//       array[i] = raw.charCodeAt(i);
-//     }
-
-//     // var data = Array.from(array)
-//     return array;
-//   }
+      reader.onload = () => {
+        const base64Strings = (reader.result as string).split(',')[1];
+        resolve(base64Strings);
+      };
+  
+      reader.onerror = () => {
+        reject('Error reading file');
+      };
+  
+      reader.readAsDataURL(file);
+    });
+  }
+  
 
 
 
 
   ngOnDestroy(): void {
-    this.addPersonSubscribtion?.unsubscribe();
+    this.addManSubscription?.unsubscribe();
   }
-
 }

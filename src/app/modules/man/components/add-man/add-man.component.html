@@ -16,7 +16,7 @@
             <div class="row mt-3">
                 <div class="col">
                     <label for="image" class="form-label">Your image</label>
-                    <input type="file" class="form-control" id="image" #fileInput>
+                    <input (change)="onFileSelected()" type="file" class="form-control" id="image" #fileInput>
                 </div>
             </div>
 
