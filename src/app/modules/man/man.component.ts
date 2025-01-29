@@ -23,7 +23,8 @@ export class ManComponent implements OnInit {
     this.manService.getAllMen().subscribe(records => {
       records.forEach(record => {
         
-
+        // byte[] is being serealised as Base64String in Angular "record.imagebytes"
+        // JSON এ byte[] ডেটা সাধারণত Base64String হিসেবে সিরিয়ালাইজড হয়।
         // Man অবজেক্ট তৈরি
         var object: any = {
           id: record.id,
