@@ -24,6 +24,7 @@ export class AddManComponent implements OnDestroy {
   base64String: any; // Directly using Uint8Array
   fileName: string = ''; // Default to empty string if undefined
   fileType: string = ''; // Default to empty string if undefined
+  fileSize: string = ''; // Default to empty string if undefined
 
   constructor(private manService: ManService, private router: Router) {}
 
@@ -33,6 +34,7 @@ export class AddManComponent implements OnDestroy {
       name: this.manForm.value.name as string, // Use the form value
       filename: this.fileName, // Ensure fileName is always a string (fallback to empty string)
       filetype: this.fileType,
+      filesize: this.fileSize,
       base64string: this.base64String
     };
 
@@ -56,6 +58,7 @@ export class AddManComponent implements OnDestroy {
     if (file) {
       this.fileName = file.name; // Set file name
       this.fileType = file.type;
+      this.fileSize = this.getFileSizeString(file);
       this.base64String = await this.fileToBase64String(file);
       /* const reader = new FileReader();
       reader.onload = (event: any) => {
@@ -87,6 +90,48 @@ export class AddManComponent implements OnDestroy {
       reader.readAsDataURL(file);
     });
   }
+
+
+
+  getFileSizeString(file: File): string {
+    const size = file.size; // file size in bytes
+    let sizeString = '';
+  
+    if (size / 1024 < 1024) {
+      const length = size / 1024; // Convert to KB
+      sizeString = `${Math.round(length * 100) / 100} KB(s)`;
+    } else {
+      const length = size / (1024 * 1024); // Convert to MB
+      sizeString = `${Math.round(length * 100) / 100} MB(s)`;
+    }
+  
+    return sizeString;
+  }
+  
+
+
+
+
+  fileToUint8Array(file: File): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(new Uint8Array(reader.result));
+        } else {
+          reject('Error converting file to ArrayBuffer');
+        }
+      };
+  
+      reader.onerror = () => {
+        reject('Error reading file');
+      };
+  
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  
   
 
 

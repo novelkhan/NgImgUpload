@@ -3,6 +3,7 @@ export class Man {
     name: string = '';
     filename: string = '';
     filetype: string ='';
+    filesize: string ='';
     base64string?: any;
     imagebytes?: any;
 }
