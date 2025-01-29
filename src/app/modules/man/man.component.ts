@@ -36,6 +36,11 @@ export class ManComponent implements OnInit {
           uint8array: this.Base64StringToUint8Array(record.base64string)
         };
 
+        /* console.log(this.getFileType(record.imagebytes));
+        console.log(typeof record.imagebytes)
+        console.log(typeof byteArray); // এটি object হওয়া উচিত
+        console.log(byteArray instanceof Uint8Array); // এটি true হওয়া উচিত */
+
         this.men.push(object);
       });
     });
