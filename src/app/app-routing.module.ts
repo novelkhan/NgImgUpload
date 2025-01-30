@@ -15,6 +15,8 @@ const routes: Routes = [
   {path:'person', loadChildren: () => import('./modules/person/person.module').then(module => module.PersonModule)},
   // Implementing lazy loading for Man module by following format
   {path:'man', loadChildren: () => import('./modules/man/man.module').then(module => module.ManModule)},
+  // Implementing lazy loading for Item module by following format
+  {path:'item', loadChildren: () => import('./modules/item/item.module').then(module => module.ItemModule)},
   {path: 'not-found', component: NotFoundComponent},
   {path: '**', component: NotFoundComponent, pathMatch: 'full'}
 ];
