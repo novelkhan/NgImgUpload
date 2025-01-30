@@ -1,21 +1,99 @@
-<div class="container">
+<div class="container bg-light p-0 shadow-lg rounded-3 min-vh-100 d-flex flex-column">
+  <!-- 
+    এই div টি পুরো পৃষ্ঠাটিকে একটি কন্টেইনারে রাখে।
+    bg-light: হালকা রঙের ব্যাকগ্রাউন্ড।
+    p-0: প্যাডিং শূন্য (কোন অতিরিক্ত স্পেস নেই)।
+    shadow-lg: বড় শ্যাডো ইফেক্ট।
+    rounded-3: কোণাগুলো হালকা গোলাকার।
+    min-vh-100: পৃষ্ঠার উচ্চতা সর্বনিম্ন ১০০% ভিউপোর্ট হাইট।
+    d-flex flex-column: ফ্লেক্সবক্স ব্যবহার করে কন্টেন্টকে কলাম আকারে সাজানো।
+  -->
 
-    <h1 class="mt-3">All Persons</h1>
-  
-    <div class="d-flex justify-content-end mt-3">
-      <a [routerLink]="['/person/add']" class="btn btn-primary rounded-pill">Add Person</a>
+  <!-- স্টিকি হেডার -->
+  <div class="bg-gradient-primary text-white p-3 position-sticky top-0 shadow-sm">
+    <!-- 
+      bg-gradient-primary: গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড (নীল থেকে বেগুনি)।
+      text-white: সাদা টেক্সট।
+      p-3: প্যাডিং (স্পেস)।
+      position-sticky top-0: হেডারটি পৃষ্ঠার উপরে আটকে থাকবে।
+      shadow-sm: ছোট শ্যাডো ইফেক্ট।
+    -->
+    <div class="d-flex justify-content-end">
+      <!-- 
+        d-flex justify-content-end: ফ্লেক্সবক্স ব্যবহার করে কন্টেন্টকে ডান দিকে সাজানো।
+      -->
+      <a [routerLink]="['/man']" class="btn btn-outline-light rounded-pill ms-2 fw-bold hover-scale">
+        <i class="fas fa-male me-2"></i>All Men
+        <!-- 
+          btn-outline-light: হালকা রঙের আউটলাইন বাটন।
+          rounded-pill: বাটনটি গোলাকার।
+          ms-2: বাম দিকে মার্জিন (স্পেস)।
+          fw-bold: টেক্সট বোল্ড।
+          hover-scale: হোভার এফেক্ট (বাটন বড় হবে)।
+        -->
+      </a>
+      <a [routerLink]="['/item']" class="btn btn-outline-light rounded-pill ms-2 fw-bold hover-scale">
+        <i class="fas fa-box me-2"></i>All Items
+        <!-- 
+          একই স্টাইল, শুধু আইকন এবং টেক্সট আলাদা।
+        -->
+      </a>
     </div>
-    <div class="d-flex justify-content-end mt-3">
-      <a [routerLink]="['/man']" class="btn btn-primary rounded-pill">All Men</a>
-    </div>
-    <div class="d-flex justify-content-end mt-3">
-      <a [routerLink]="['/item']" class="btn btn-primary rounded-pill">All Items</a>
-    </div>
-  
-    <ng-container *ngIf="persons">
-      <!-- <table class="table table-bordered mt-3"> -->
-      <table class="table table-striped">
-        <thead>
+  </div>
+
+  <!-- পৃষ্ঠার শিরোনাম -->
+  <h1 class="mt-5 text-center display-4 fw-bold text-gradient-primary">All Persons</h1>
+  <!-- 
+    mt-5: উপরের দিকে মার্জিন (স্পেস)।
+    text-center: টেক্সট কেন্দ্রে সাজানো।
+    display-4: বড় ফন্ট সাইজ।
+    fw-bold: টেক্সট বোল্ড।
+    text-gradient-primary: গ্রেডিয়েন্ট টেক্সট (নীল থেকে বেগুনি)।
+  -->
+
+  <!-- নতুন ব্যক্তি যোগ করার বাটন -->
+  <div class="d-flex justify-content-end mt-4 p-3">
+    <!-- 
+      d-flex justify-content-end: কন্টেন্ট ডান দিকে সাজানো।
+      mt-4: উপরের দিকে মার্জিন।
+      p-3: প্যাডিং।
+    -->
+    <a [routerLink]="['/person/add']" class="btn btn-success rounded-pill fw-bold hover-scale">
+      <i class="fas fa-plus me-2"></i>Add New Person
+      <!-- 
+        btn-success: সবুজ রঙের বাটন।
+        rounded-pill: গোলাকার বাটন।
+        fw-bold: টেক্সট বোল্ড।
+        hover-scale: হোভার এফেক্ট।
+      -->
+    </a>
+  </div>
+
+  <!-- ব্যক্তিদের টেবিল -->
+  <ng-container *ngIf="persons">
+    <!-- 
+      *ngIf="persons": শুধুমাত্র persons ডেটা থাকলে এই অংশটি দেখাবে।
+    -->
+    <div class="table-responsive m-3 p-3 shadow-sm rounded-3 bg-white flex-grow-1">
+      <!-- 
+        table-responsive: টেবিলটি রেসপন্সিভ (ছোট স্ক্রিনে স্ক্রল হবে)।
+        m-3: মার্জিন (স্পেস)।
+        p-3: প্যাডিং।
+        shadow-sm: ছোট শ্যাডো ইফেক্ট।
+        rounded-3: কোণাগুলো গোলাকার।
+        bg-white: সাদা ব্যাকগ্রাউন্ড।
+        flex-grow-1: কন্টেন্টটি অবশিষ্ট জায়গা পূরণ করবে।
+      -->
+      <table class="table table-hover align-middle">
+        <!-- 
+          table-hover: টেবিলের সারিগুলোতে হোভার এফেক্ট।
+          align-middle: কন্টেন্ট ভার্টিক্যালি মাঝখানে সাজানো।
+        -->
+        <thead class="bg-gradient-primary text-white">
+          <!-- 
+            bg-gradient-primary: গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড।
+            text-white: সাদা টেক্সট।
+          -->
           <tr>
             <th>Id</th>
             <th>Name</th>
@@ -24,33 +102,117 @@
             <th>File Type</th>
             <th>Preview</th>
             <th>Size</th>
-            <th></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let person of persons; let i = index">
-            <td>{{i+1}} {{person.id}}</td>
+          <tr *ngFor="let person of persons; let i = index" class="hover-shadow">
+            <!-- 
+              *ngFor: persons অ্যারের প্রতিটি আইটেমের জন্য এই সারিটি তৈরি করবে।
+              hover-shadow: হোভার এফেক্ট (শ্যাডো)।
+            -->
+            <td class="fw-bold text-primary">{{i+1}} {{person.id}}</td>
+            <!-- 
+              fw-bold: টেক্সট বোল্ড।
+              text-primary: প্রাইমারি রঙের টেক্সট।
+            -->
             <td>{{person.name}}</td>
             <td>{{person.city}}</td>
             <td>{{person.filename}}</td>
             <td>{{person.type}}</td>
-            <!-- <td><img src={{person.image}} alt={{person.filename}} width="100" height="50"></td> -->
-            <td><img [src]="person.image" alt={{person.filename}} width="100" height="50"></td>
+            <td>
+              <img [src]="person.image" alt="{{person.filename}}" class="img-thumbnail rounded" width="100" height="50">
+              <!-- 
+                img-thumbnail: ছবির জন্য থাম্বনেইল স্টাইল।
+                rounded: গোলাকার কোণা।
+              -->
+            </td>
             <td>{{person.size}}</td>
             <td>
-              <input type="button" class="btn btn-success" (click)="DownloadFile(person.id, person.type, person.filename)" value="Download"/>|
-              <input type="button" class="btn btn-danger" (click)="onDirectDelete(person.id)" value="Direct Delete"/>
-              <!-- <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(person.id)">Direct Delete</a> -->
+              <button class="btn btn-sm btn-success me-2 rounded-pill hover-scale" (click)="DownloadFile(person.id, person.type, person.filename)">
+                <i class="fas fa-download me-1"></i>Download
+                <!-- 
+                  btn-sm: ছোট বাটন।
+                  me-2: ডান দিকে মার্জিন।
+                  hover-scale: হোভার এফেক্ট।
+                -->
+              </button>
+              <button class="btn btn-sm btn-danger rounded-pill hover-scale" (click)="onDirectDelete(person.id)">
+                <i class="fas fa-trash me-1"></i>Delete
+              </button>
             </td>
-            <td>
-              <!-- <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/details', man.id]">Details</a>| -->
-              <!-- <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/edit', man.id]">Edit</a>| -->
-              <!-- <a class="btn btn-sm btn-outline-danger rounded-pill" [routerLink]="['/man/delete', man.id]">Delete</a> | -->
-              <!-- <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(man.id)">Direct Delete</a> --> 
-            </td>
+
+            <!-- <td>
+              <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/details', man.id]">Details</a>|
+              <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/edit', man.id]">Edit</a>|
+              <a class="btn btn-sm btn-outline-danger rounded-pill" [routerLink]="['/man/delete', man.id]">Delete</a> |
+              <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(man.id)">Direct Delete</a> 
+            </td> -->
           </tr>
         </tbody>
       </table>
-    </ng-container>
-  
-  </div>
+    </div>
+  </ng-container>
+
+  <!-- স্টিকি ফুটার -->
+  <footer class="bg-gradient-primary text-white text-center p-3 mt-auto">
+    <!-- 
+      bg-gradient-primary: গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড।
+      text-white: সাদা টেক্সট।
+      text-center: টেক্সট কেন্দ্রে সাজানো।
+      p-3: প্যাডিং।
+      mt-auto: ফুটারটি নিচে আটকে থাকবে।
+    -->
+    <div class="container">
+      <p class="mb-0">&copy; 2023 Novel Khan. All rights reserved.</p>
+      <small>Designed with ❤️ by Novel Khan</small>
+    </div>
+  </footer>
+</div>
+
+<!-- কাস্টম CSS -->
+<style>
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    /* 
+      গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড (বেগুনি থেকে নীল)।
+    */
+  }
+
+  .text-gradient-primary {
+    background: -webkit-linear-gradient(135deg, #6a11cb, #2575fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* 
+      গ্রেডিয়েন্ট টেক্সট (বেগুনি থেকে নীল)।
+    */
+  }
+
+  .hover-scale {
+    transition: transform 0.2s ease-in-out;
+    /* 
+      হোভার এফেক্ট: বাটন বড় হবে।
+    */
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-shadow {
+    transition: box-shadow 0.2s ease-in-out;
+    /* 
+      হোভার এফেক্ট: শ্যাডো দেখা যাবে।
+    */
+  }
+
+  .hover-shadow:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+</style>
+  <!-- <td>
+    <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/details', man.id]">Details</a>|
+    <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/edit', man.id]">Edit</a>|
+    <a class="btn btn-sm btn-outline-danger rounded-pill" [routerLink]="['/man/delete', man.id]">Delete</a> |
+    <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(man.id)">Direct Delete</a> 
+  </td> -->
