@@ -7,6 +7,7 @@ import { PersonModule } from './modules/person/person.module';
 import { ManModule } from './modules/man/man.module';
 import { NotFoundComponent } from './components/not-found/not-found.component';
 import { HomeComponent } from './components/home/home.component';
+import { ItemModule } from './modules/item/item.module';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { HomeComponent } from './components/home/home.component';
     BrowserModule,
     AppRoutingModule,
     PersonModule,
-    ManModule
+    ManModule,
+    ItemModule
   ],
   providers: [],
   bootstrap: [AppComponent]
