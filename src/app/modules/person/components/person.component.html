@@ -180,9 +180,12 @@
   }
 
   .text-gradient-primary {
-    background: -webkit-linear-gradient(135deg, #6a11cb, #2575fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background: -webkit-linear-gradient(135deg, #6a11cb, #2575fc); /* For WebKit browsers (Chrome, Safari) */
+    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Standard property for other browsers */
+    -webkit-background-clip: text; /* Vendor-prefixed for WebKit browsers */
+    background-clip: text; /* Standard property for other browsers */
+    -webkit-text-fill-color: transparent; /* Vendor-prefixed for WebKit browsers */
+    color: transparent; /* Standard property for other browsers */
     /* 
       গ্রেডিয়েন্ট টেক্সট (বেগুনি থেকে নীল)।
     */
@@ -210,9 +213,3 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 </style>
-  <!-- <td>
-    <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/details', man.id]">Details</a>|
-    <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/edit', man.id]">Edit</a>|
-    <a class="btn btn-sm btn-outline-danger rounded-pill" [routerLink]="['/man/delete', man.id]">Delete</a> |
-    <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(man.id)">Direct Delete</a> 
-  </td> -->

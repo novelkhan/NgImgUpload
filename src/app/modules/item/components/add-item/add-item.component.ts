@@ -1,10 +1,147 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from "@angular/core";
+import { Subscription } from "rxjs/internal/Subscription";
+import { ItemService } from "../../services/item.service";
+import { Router } from "@angular/router";
+import { FormControl, FormGroup } from "@angular/forms";
+import { Item } from "../../models/item.model";
+
 
 @Component({
   selector: 'app-add-item',
   templateUrl: './add-item.component.html',
   styleUrl: './add-item.component.scss'
 })
-export class AddItemComponent {
+export class AddItemComponent implements OnDestroy {
 
+  fileForm = new FormGroup({
+      file: new FormControl() // Initialize the file input control
+    });
+
+  // @ViewChild('fileInput') fileInput: any;
+  @ViewChild('fileInput', { static: false }) fileInput: any;
+
+
+
+  private addItemSubscription?: Subscription;
+  fileName: string = ''; // Default to empty string if undefined
+  fileType: string = ''; // Default to empty string if undefined
+  fileSize: string = ''; // Default to empty string if undefined
+  base64String: string = ''; // Directly using FormGroup element
+  constructor(private itemService: ItemService, private router: Router) {}
+
+  async onFormSubmit() {
+    const item: Item = {
+      filename: this.fileName, // Ensure fileName is always a string (fallback to empty string)
+      filetype: this.fileType,
+      filesize: this.fileSize,
+      filestring: this.base64String
+    };
+
+    // console.log('Payload to send:', JSON.stringify(item));
+
+    // Make the API call
+    this.addItemSubscription = this.itemService.addItem(item).subscribe({
+      next: (response) => {
+        console.log('Response:', response);
+        this.router.navigateByUrl('/item'); // Navigate on success
+      },
+      error: (error) => {
+        console.error('Error occurred:', error);
+      }
+    });
+    
+  }
+
+  
+
+  async onFileSelected() {
+    const file: File = this.fileInput.nativeElement.files[0];
+    if (file) {
+      this.fileName = file.name; // Set file name
+      this.fileType = file.type;
+      this.fileSize = this.getFileSizeString(file);
+      this.base64String = await this.fileToBase64String(file);
+      // this.base64String = await this.fileToBase64String(file);
+      /* const reader = new FileReader();
+      reader.onload = (event: any) => {
+        this.base64String = (reader.result as string).split(',')[1];
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+      };
+      reader.readAsDataURL(file); */
+    }
+  }
+
+
+
+
+  fileToBase64String(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = () => {
+        const base64Strings = (reader.result as string).split(',')[1];
+        resolve(base64Strings);
+      };
+  
+      reader.onerror = () => {
+        reject('Error reading file');
+      };
+  
+      reader.readAsDataURL(file);
+    });
+  }
+
+
+
+  getFileSizeString(file: File): string {
+    const size = file.size; // File size in bytes
+    let sizeString = '';
+  
+    if (size < 1024 * 1024) { // Less than 1 MB
+      const length = size / 1024; // Convert to KB
+      const unit = length <= 1 ? 'KB' : 'KBs'; // Check if size is <= 1 KB
+      sizeString = `${Math.round(length * 100) / 100} ${unit}`;
+    } else { // 1 MB or more
+      const length = size / (1024 * 1024); // Convert to MB
+      const unit = length <= 1 ? 'MB' : 'MBs'; // Check if size is <= 1 MB
+      sizeString = `${Math.round(length * 100) / 100} ${unit}`;
+    }
+  
+    return sizeString;
+  }
+  
+
+
+
+
+  fileToUint8Array(file: File): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(new Uint8Array(reader.result));
+        } else {
+          reject('Error converting file to ArrayBuffer');
+        }
+      };
+  
+      reader.onerror = () => {
+        reject('Error reading file');
+      };
+  
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  
+  
+
+
+
+
+  ngOnDestroy(): void {
+    this.addItemSubscription?.unsubscribe();
+  }
 }
