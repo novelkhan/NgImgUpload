@@ -132,6 +132,23 @@ export class ItemComponent implements OnInit {
 
 
 
+  Base64StringToFile(base64String: string, fileType: string, fileName: string): File {
+    // Base64String কে Blob এ রূপান্তর
+    const byteCharacters = atob(base64String);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const uInt8Array = new Uint8Array(byteNumbers);
+    const blob = new Blob([uInt8Array], { type: fileType });
+  
+    // Convert Blob to File
+    const file = new File([blob], fileName, { type: fileType, lastModified: Date.now() });
+    return file;
+  }
+
+
+
 
 
 

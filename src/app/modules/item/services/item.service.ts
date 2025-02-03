@@ -23,8 +23,12 @@ export class ItemService {
       return this.http.get<Item>(`${environment.personApiBaseUrl}/item/`+ id);
     }
   
-    updateItem(id: number, item: Item) : Observable<Item> {
+    /* updateItem(id: number, item: Item) : Observable<Item> {
       return this.http.put<Item>(`${environment.personApiBaseUrl}/item/`+ id, item);
+    } */
+
+    updateItem(id: number, item: Item): Observable<Item> {
+      return this.http.put<Item>(`${environment.personApiBaseUrl}/item/${id}`, item);
     }
   
     deleteItem(id: number) : Observable<Item> {

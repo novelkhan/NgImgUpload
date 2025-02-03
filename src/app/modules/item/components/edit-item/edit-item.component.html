@@ -1,0 +1,38 @@
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Edit File</h1>
+  
+    <form [formGroup]="itemForm" (ngSubmit)="onFormSubmit()" class="card p-4 shadow">
+      <!-- Preview of the old image -->
+      <div class="mb-4 text-center">
+        <label class="form-label fw-bold">Old Image Preview</label>
+        <div class="image-preview-container">
+          <img [src]="oldImagePreview" alt="Old Image Preview" class="img-fluid rounded" *ngIf="oldImagePreview">
+          <div *ngIf="!oldImagePreview" class="no-image-placeholder">
+            No image available
+          </div>
+        </div>
+      </div>
+  
+      <!-- File input for new image -->
+      <div class="mb-4">
+        <label for="file" class="form-label fw-bold">Upload New File</label>
+        <input type="file" class="form-control" (change)="onFileChange($event)" id="file" accept="image/*">
+      </div>
+  
+      <!-- Preview of the new image -->
+      <div class="mb-4 text-center">
+        <label class="form-label fw-bold">New Image Preview</label>
+        <div class="image-preview-container">
+          <img [src]="newImagePreview" alt="New Image Preview" class="img-fluid rounded" *ngIf="newImagePreview">
+          <div *ngIf="!newImagePreview" class="no-image-placeholder">
+            No new image selected
+          </div>
+        </div>
+      </div>
+  
+      <!-- Submit button -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Update</button>
+      </div>
+    </form>
+  </div>

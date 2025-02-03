@@ -1,1 +1,18 @@
-<p>add works!</p>
+<div class="container">
+    <h1 class="mt-3">Add a new file</h1>
+
+    <form [formGroup]="fileForm" (ngSubmit)="onFormSubmit()">
+        <div class="mt-2">
+            <div class="row mt-3">
+                <div class="col">
+                    <label for="file" class="form-label">Your File</label>
+                    <input type="file" class="form-control" formControlName="file" id="file">
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </form>
+</div>

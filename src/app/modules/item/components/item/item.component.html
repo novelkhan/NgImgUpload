@@ -3,6 +3,7 @@
   
     <div class="d-flex justify-content-end mt-3">
       <a [routerLink]="['/item/add']" class="btn btn-primary rounded-pill">Add a new item</a>
+      <a [routerLink]="['/item/new']" class="btn btn-primary rounded-pill">Add a new one</a>
     </div>
   
     <ng-container *ngIf="items">
@@ -28,10 +29,11 @@
             </td>
             <td>
               <input type="button" class="btn btn-success" (click)="DownloadFile(item.uint8array, item.filetype, item.filename)" value="Download"/>|
-              <input type="button" class="btn btn-danger" (click)="onDirectDelete(item.id)" value="Direct Delete"/>
+              <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/item/edit', item.id]">Edit</a>|
               <!-- <a class="btn btn-sm btn-danger rounded-pill" (click)="onDirectDelete(person.id)">Direct Delete</a> -->
             </td>
             <td>
+              <input type="button" class="btn btn-danger" (click)="onDirectDelete(item.id)" value="Direct Delete"/>
               <!-- <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/details', man.id]">Details</a>| -->
               <!-- <a class="btn btn-sm btn-outline-primary rounded-pill" [routerLink]="['/man/edit', man.id]">Edit</a>| -->
               <!-- <a class="btn btn-sm btn-outline-danger rounded-pill" [routerLink]="['/man/delete', man.id]">Delete</a> | -->
