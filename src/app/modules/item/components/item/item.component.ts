@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ItemService } from '../../services/item.service';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.development';
 
 @Component({
   selector: 'app-item',
@@ -16,10 +17,10 @@ export class ItemComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadMen();
+    this.loadItems();
   }
 
-  loadMen(): void {
+  loadItems(): void {
     this.itemService.getAllItems().subscribe(records => {
       records.forEach(record => {
         console.log(typeof(record.filename));
@@ -46,6 +47,24 @@ export class ItemComponent implements OnInit {
     });
     //console.log(this.items);
   }
+
+
+  generateDownloadLink(itemId: number): void {
+    this.http.post(`${environment.personApiBaseUrl}/item/generate-download-link/${itemId}`, {}).subscribe({
+      next: (response: any) => {
+        const downloadLink = response.downloadLink;
+        alert(`Download Link: ${downloadLink}`);
+        // Optionally, copy the link to clipboard
+        navigator.clipboard.writeText(downloadLink).then(() => {
+          alert('Download link copied to clipboard!');
+        });
+      },
+      error: (error) => {
+        console.error('Error generating download link:', error);
+      }
+    });
+  }
+
 
   DownloadFile(uInt8Array: Uint8Array, fileType: string, filename: string) {
     const blob = new Blob([uInt8Array], { type: fileType });

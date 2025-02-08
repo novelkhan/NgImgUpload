@@ -44,6 +44,9 @@
               <img [src]="item.image" alt="{{ item.filename }}" class="img-thumbnail" width="100" height="50">
             </td>
             <td>
+              <button class="btn btn-info btn-sm me-2" (click)="generateDownloadLink(item.id)">
+                <i class="fas fa-link"></i> Generate Download Link
+              </button>
               <button class="btn btn-success btn-sm me-2" (click)="DownloadFile(item.uint8array, item.filetype, item.filename)">
                 <i class="fas fa-download"></i> Download
               </button>
