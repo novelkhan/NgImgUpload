@@ -89,8 +89,34 @@ export class EditItemComponent implements OnInit {
     }
   }
 
+
+  resetFileInput(): void {
+    // Reset file input and new image preview
+    this.file = null;
+    this.newImagePreview = null;
+    this.itemForm.patchValue({
+      filestring: '',
+      filename: '',
+      filetype: '',
+      filesize: ''
+    });
+  
+    // Reset the file input element
+    const fileInput = document.getElementById('file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+
   onFormSubmit(): void {
     if (this.itemForm.valid && this.itemId) {
+      // If no new file is selected, do not update the file
+      if (!this.newImagePreview) {
+        alert('No new file selected. The existing file will remain unchanged.');
+        return;
+      }
+  
       const item: Item = {
         id: this.itemId,
         filename: this.itemForm.value.filename!,
@@ -98,7 +124,7 @@ export class EditItemComponent implements OnInit {
         filesize: this.itemForm.value.filesize!,
         filestring: this.itemForm.value.filestring!
       };
-
+  
       this.itemService.updateItem(this.itemId, item).subscribe({
         next: () => {
           this.router.navigateByUrl('/item');
