@@ -103,7 +103,7 @@ export class AddItemComponent implements OnDestroy {
 
       const file = new File([response], this.getFileNameFromUrl(url), { type: response.type });
 
-      this.fileName = file.name;
+      this.fileName = decodeURIComponent(file.name);
       this.fileType = file.type;
       this.fileSize = this.getFileSizeString(file);
       this.base64String = await this.fileToBase64String(file);
