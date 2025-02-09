@@ -50,11 +50,10 @@ export class ItemComponent implements OnInit {
 
 
   generateDownloadLink(itemId: number): void {
-    this.http.post(`${environment.personApiBaseUrl}/item/generate-download-link/${itemId}`, {}).subscribe({
-      next: (response: any) => {
+    this.http.post<{ downloadLink: string }>(`${environment.personApiBaseUrl}/item/generate-download-link/${itemId}`, {}).subscribe({
+      next: (response) => {
         const downloadLink = response.downloadLink;
         alert(`Download Link: ${downloadLink}`);
-        // Optionally, copy the link to clipboard
         navigator.clipboard.writeText(downloadLink).then(() => {
           alert('Download link copied to clipboard!');
         });

@@ -4,6 +4,8 @@ import { ItemService } from "../../services/item.service";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup } from "@angular/forms";
 import { Item } from "../../models/item.model";
+import { HttpClient } from "@angular/common/http";
+import { firstValueFrom } from "rxjs";
 
 
 @Component({
@@ -14,7 +16,8 @@ import { Item } from "../../models/item.model";
 export class AddItemComponent implements OnDestroy {
 
   fileForm = new FormGroup({
-      file: new FormControl() // Initialize the file input control
+      file: new FormControl(), // Initialize the file input control
+      remoteUrl: new FormControl() // Remote URL input control
     });
 
   // @ViewChild('fileInput') fileInput: any;
@@ -27,29 +30,41 @@ export class AddItemComponent implements OnDestroy {
   fileType: string = ''; // Default to empty string if undefined
   fileSize: string = ''; // Default to empty string if undefined
   base64String: string = ''; // Directly using FormGroup element
-  constructor(private itemService: ItemService, private router: Router) {}
+  constructor(private itemService: ItemService, private router: Router, private http: HttpClient) {}
 
   async onFormSubmit() {
+    const remoteUrl = this.fileForm.get('remoteUrl')?.value;
+  
+    if (remoteUrl) {
+      // If remote URL is provided, download the file from the URL
+      await this.downloadFileFromUrl(remoteUrl);
+    } else {
+      // If no remote URL, proceed with the file upload logic
+      const file: File = this.fileInput.nativeElement.files[0];
+      if (file) {
+        this.fileName = file.name;
+        this.fileType = file.type;
+        this.fileSize = this.getFileSizeString(file);
+        this.base64String = await this.fileToBase64String(file);
+      }
+    }
+  
     const item: Item = {
-      filename: this.fileName, // Ensure fileName is always a string (fallback to empty string)
+      filename: this.fileName,
       filetype: this.fileType,
       filesize: this.fileSize,
       filestring: this.base64String
     };
-
-    // console.log('Payload to send:', JSON.stringify(item));
-
-    // Make the API call
+  
     this.addItemSubscription = this.itemService.addItem(item).subscribe({
       next: (response) => {
         console.log('Response:', response);
-        this.router.navigateByUrl('/item'); // Navigate on success
+        this.router.navigateByUrl('/item');
       },
       error: (error) => {
         console.error('Error occurred:', error);
       }
     });
-    
   }
 
   
@@ -74,6 +89,35 @@ export class AddItemComponent implements OnDestroy {
   }
 
 
+
+ 
+
+  async downloadFileFromUrl(url: string) {
+    try {
+      const response = await firstValueFrom(this.http.get(url, { responseType: 'blob' }));
+      
+      // Check if response is undefined
+      if (!response) {
+        throw new Error('Failed to download file from the provided URL.');
+      }
+
+      const file = new File([response], this.getFileNameFromUrl(url), { type: response.type });
+
+      this.fileName = file.name;
+      this.fileType = file.type;
+      this.fileSize = this.getFileSizeString(file);
+      this.base64String = await this.fileToBase64String(file);
+    } catch (error) {
+      console.error('Error downloading file from URL:', error);
+      alert('Failed to download file from the provided URL.');
+    }
+  }
+
+
+  getFileNameFromUrl(url: string): string {
+    // Extract the file name from the URL
+    return url.substring(url.lastIndexOf('/') + 1);
+  }
 
 
   fileToBase64String(file: File): Promise<string> {
