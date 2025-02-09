@@ -50,19 +50,21 @@ export class ItemComponent implements OnInit {
 
 
   generateDownloadLink(itemId: number): void {
-    this.http.post<{ downloadLink: string }>(`${environment.personApiBaseUrl}/item/generate-download-link/${itemId}`, {}).subscribe({
-      next: (response) => {
-        const downloadLink = response.downloadLink;
-        alert(`Download Link: ${downloadLink}`);
-        navigator.clipboard.writeText(downloadLink).then(() => {
-          alert('Download link copied to clipboard!');
+    this.http.post<{ downloadLink: string }>(`${environment.personApiBaseUrl}/item/generate-download-link/${itemId}`, {})
+        .subscribe({
+            next: (response) => {
+                const downloadLink = response.downloadLink;
+                alert(`Download Link: ${downloadLink}`);
+                navigator.clipboard.writeText(downloadLink).then(() => {
+                    alert('Download link copied to clipboard!');
+                });
+            },
+            error: (error) => {
+                console.error('Error generating download link:', error);
+            }
         });
-      },
-      error: (error) => {
-        console.error('Error generating download link:', error);
-      }
-    });
-  }
+}
+
 
 
   DownloadFile(uInt8Array: Uint8Array, fileType: string, filename: string) {
