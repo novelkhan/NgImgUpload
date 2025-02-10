@@ -34,4 +34,10 @@ export class ItemService {
     deleteItem(id: number) : Observable<Item> {
       return this.http.delete<Item>(`${environment.personApiBaseUrl}/item/`+ id);
     }
+
+
+
+    uploadFromUrl(url: string) {
+      return this.http.post(`${environment.personApiBaseUrl}/item/upload-from-url`, { url });
+    }
 }

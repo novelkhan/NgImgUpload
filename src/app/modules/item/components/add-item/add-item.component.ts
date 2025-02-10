@@ -17,7 +17,8 @@ export class AddItemComponent implements OnDestroy {
 
   fileForm = new FormGroup({
       file: new FormControl(), // Initialize the file input control
-      remoteUrl: new FormControl() // Remote URL input control
+      remoteUrl: new FormControl(), // Remote URL input control
+      serverUpload: new FormControl() // Remote URL input control
     });
 
   // @ViewChild('fileInput') fileInput: any;
@@ -30,12 +31,48 @@ export class AddItemComponent implements OnDestroy {
   fileType: string = ''; // Default to empty string if undefined
   fileSize: string = ''; // Default to empty string if undefined
   base64String: string = ''; // Directly using FormGroup element
+  previewUrl: string | ArrayBuffer | null = null; // For file or URL preview
+  isImage: boolean = false; // To check if the file is an image
+
+
   constructor(private itemService: ItemService, private router: Router, private http: HttpClient) {}
 
+
+  ngOnInit(): void {
+
+    this.fileForm.get('serverUpload')?.valueChanges.subscribe((url: string) => {
+      if (url) {
+        this.previewFromUrl(url); // Show preview for the URL
+      } else {
+        this.previewUrl = null; // Clear preview if URL is empty
+      }
+    });
+
+    // Listen for changes in the remoteUrl input field
+    this.fileForm.get('remoteUrl')?.valueChanges.subscribe((url: string) => {
+      if (url) {
+        this.previewFromUrl(url); // Show preview for the URL
+      } else {
+        this.previewUrl = null; // Clear preview if URL is empty
+      }
+    });
+  }
+
+
   async onFormSubmit() {
+    const serverUpload = this.fileForm.get('serverUpload')?.value;
     const remoteUrl = this.fileForm.get('remoteUrl')?.value;
   
-    if (remoteUrl) {
+    if (serverUpload) {
+      // If server upload URL is provided, send the URL to the backend
+      try {
+        const response = await firstValueFrom(this.itemService.uploadFromUrl(serverUpload));
+        console.log('Response:', response);
+        this.router.navigateByUrl('/item');
+      } catch (error) {
+        console.error('Error occurred:', error);
+      }
+    } else if (remoteUrl) {
       // If remote URL is provided, download the file from the URL
       await this.downloadFileFromUrl(remoteUrl);
     } else {
@@ -49,25 +86,46 @@ export class AddItemComponent implements OnDestroy {
       }
     }
   
-    const item: Item = {
-      filename: this.fileName,
-      filetype: this.fileType,
-      filesize: this.fileSize,
-      filestring: this.base64String
-    };
+    if (!serverUpload) {
+      const item: Item = {
+        filename: this.fileName,
+        filetype: this.fileType,
+        filesize: this.fileSize,
+        filestring: this.base64String
+      };
   
-    this.addItemSubscription = this.itemService.addItem(item).subscribe({
-      next: (response) => {
-        console.log('Response:', response);
-        this.router.navigateByUrl('/item');
-      },
-      error: (error) => {
-        console.error('Error occurred:', error);
-      }
-    });
+      this.addItemSubscription = this.itemService.addItem(item).subscribe({
+        next: (response) => {
+          console.log('Response:', response);
+          this.router.navigateByUrl('/item');
+        },
+        error: (error) => {
+          console.error('Error occurred:', error);
+        }
+      });
+    }
   }
 
   
+
+  //  async onFileSelected() {
+  //   const file: File = this.fileInput.nativeElement.files[0];
+  //   if (file) {
+  //     this.fileName = file.name; // Set file name
+  //     this.fileType = file.type;
+  //     this.fileSize = this.getFileSizeString(file);
+  //     this.base64String = await this.fileToBase64String(file);
+  //     // this.base64String = await this.fileToBase64String(file);
+  //     /* const reader = new FileReader();
+  //     reader.onload = (event: any) => {
+  //       this.base64String = (reader.result as string).split(',')[1];
+  //     };
+  //     reader.onerror = () => {
+  //       console.error('Error reading file');
+  //     };
+  //     reader.readAsDataURL(file); */
+  //   }
+  // } 
 
   async onFileSelected() {
     const file: File = this.fileInput.nativeElement.files[0];
@@ -76,15 +134,14 @@ export class AddItemComponent implements OnDestroy {
       this.fileType = file.type;
       this.fileSize = this.getFileSizeString(file);
       this.base64String = await this.fileToBase64String(file);
-      // this.base64String = await this.fileToBase64String(file);
-      /* const reader = new FileReader();
-      reader.onload = (event: any) => {
-        this.base64String = (reader.result as string).split(',')[1];
+  
+      // Show preview for the selected file
+      this.isImage = file.type.startsWith('image'); // Check if the file is an image
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result; // Set the preview URL
       };
-      reader.onerror = () => {
-        console.error('Error reading file');
-      };
-      reader.readAsDataURL(file); */
+      reader.readAsDataURL(file); // Read the file as a data URL
     }
   }
 
@@ -95,18 +152,26 @@ export class AddItemComponent implements OnDestroy {
   async downloadFileFromUrl(url: string) {
     try {
       const response = await firstValueFrom(this.http.get(url, { responseType: 'blob' }));
-      
+  
       // Check if response is undefined
       if (!response) {
         throw new Error('Failed to download file from the provided URL.');
       }
-
+  
       const file = new File([response], this.getFileNameFromUrl(url), { type: response.type });
-
+  
       this.fileName = decodeURIComponent(file.name);
       this.fileType = file.type;
       this.fileSize = this.getFileSizeString(file);
       this.base64String = await this.fileToBase64String(file);
+  
+      // Show preview for the downloaded file
+      this.isImage = file.type.startsWith('image'); // Check if the file is an image
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result; // Set the preview URL
+      };
+      reader.readAsDataURL(file); // Read the file as a data URL
     } catch (error) {
       console.error('Error downloading file from URL:', error);
       alert('Failed to download file from the provided URL.');
@@ -157,6 +222,15 @@ export class AddItemComponent implements OnDestroy {
   }
   
 
+
+  previewFromUrl(url: string) {
+    this.isImage = url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif');
+    if (this.isImage) {
+      this.previewUrl = url; // Directly set the URL for image preview
+    } else {
+      this.previewUrl = null; // Clear preview if the URL is not an image
+    }
+  }
 
 
 
