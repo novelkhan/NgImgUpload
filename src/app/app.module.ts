@@ -8,6 +8,7 @@ import { ManModule } from './modules/man/man.module';
 import { NotFoundComponent } from './components/not-found/not-found.component';
 import { HomeComponent } from './components/home/home.component';
 import { ItemModule } from './modules/item/item.module';
+import { PropModule } from './modules/prop/prop.module';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { ItemModule } from './modules/item/item.module';
     AppRoutingModule,
     PersonModule,
     ManModule,
-    ItemModule
+    ItemModule,
+    PropModule
   ],
   providers: [],
   bootstrap: [AppComponent]
