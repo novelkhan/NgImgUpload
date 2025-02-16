@@ -32,8 +32,8 @@ export class PropComponent implements OnInit {
           filename: record.filename,
           filetype: record.filetype,
           size: record.filesize,
-          image: this.Base64StringToImageSRC(record.filedata),
-          uint8array: this.Base64StringToUint8Array(record.filedata)
+          image: this.Base64StringToImageSRC(this.Uint8ArrayToBase64String(new Uint8Array(record.filedata))),
+          uint8array: this.Base64StringToUint8Array(this.Uint8ArrayToBase64String(new Uint8Array(record.filedata)))
         };
 
         /* console.log(this.getFileType(record.imagebytes));
