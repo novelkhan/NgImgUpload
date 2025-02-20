@@ -6,6 +6,7 @@ import { FormControl, FormGroup } from "@angular/forms";
 import { Item } from "../../models/item.model";
 import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
+import { SignalrService } from "../../../../services/signalr.service";
 
 
 @Component({
@@ -35,7 +36,7 @@ export class AddItemComponent implements OnDestroy {
   isImage: boolean = false; // To check if the file is an image
 
 
-  constructor(private itemService: ItemService, private router: Router, private http: HttpClient) {}
+  constructor(private itemService: ItemService, private router: Router, private http: HttpClient, private signalrService: SignalrService) {}
 
 
   ngOnInit(): void {
@@ -60,13 +61,21 @@ export class AddItemComponent implements OnDestroy {
 
 
   async onFormSubmit() {
+
+    const connectionsId = this.signalrService.getConnectionId();
+    if (!connectionsId) {
+      console.error("SignalR connection ID is not available yet!");
+      return;
+    }
+
+
     const serverUpload = this.fileForm.get('serverUpload')?.value;
     const remoteUrl = this.fileForm.get('remoteUrl')?.value;
   
     if (serverUpload) {
       // If server upload URL is provided, send the URL to the backend
       try {
-        const response = await firstValueFrom(this.itemService.uploadFromUrl(serverUpload));
+        const response = await firstValueFrom(this.itemService.uploadFromUrl(serverUpload, connectionsId));
         console.log('Response:', response);
         this.router.navigateByUrl('/item');
       } catch (error) {
@@ -91,7 +100,8 @@ export class AddItemComponent implements OnDestroy {
         filename: this.fileName,
         filetype: this.fileType,
         filesize: this.fileSize,
-        filestring: this.base64String
+        filestring: this.base64String,
+        connectionId: connectionsId
       };
   
       this.addItemSubscription = this.itemService.addItem(item).subscribe({

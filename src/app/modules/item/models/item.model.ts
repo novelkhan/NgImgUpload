@@ -3,5 +3,7 @@ export interface Item {
     filename: string,
     filetype: string,
     filesize: string,
-    filestring: string
+    filestring: string,
+
+    connectionId?: string
 }

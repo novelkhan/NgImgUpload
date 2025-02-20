@@ -37,7 +37,10 @@ export class ItemService {
 
 
 
-    uploadFromUrl(url: string) {
-      return this.http.post(`${environment.personApiBaseUrl}/item/upload-from-url`, { url });
+    uploadFromUrl(url: string, connectionId: string) {
+      return this.http.post(`${environment.personApiBaseUrl}/item/upload-from-url`, { 
+        url: url, 
+        connectionId: connectionId  // Ensure connectionId is sent in the request body
+      });
     }
 }
