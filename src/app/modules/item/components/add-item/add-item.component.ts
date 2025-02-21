@@ -36,6 +36,15 @@ export class AddItemComponent implements OnDestroy {
   isImage: boolean = false; // To check if the file is an image
 
 
+  uploadProgress: number = 0;
+  downloadProgress: number = 0;
+  showUploadProgress: boolean = false;
+  showDownloadProgress: boolean = false;
+
+
+  isConnecting: boolean = false;
+
+
   constructor(private itemService: ItemService, private router: Router, private http: HttpClient, private signalrService: SignalrService) {}
 
 
@@ -57,16 +66,34 @@ export class AddItemComponent implements OnDestroy {
         this.previewUrl = null; // Clear preview if URL is empty
       }
     });
+
+
+    // Listen for upload progress updates
+    this.signalrService.getHubConnection().on('UploadProgress', (progress: number) => {
+      this.uploadProgress = progress;
+      this.showUploadProgress = true;
+    });
+
+    // Listen for download progress updates
+    this.signalrService.getHubConnection().on('DownloadProgress', (progress: number) => {
+      this.downloadProgress = progress;
+      this.showDownloadProgress = true;
+    });
   }
 
 
   async onFormSubmit() {
 
-    const connectionsId = this.signalrService.getConnectionId();
-    if (!connectionsId) {
-      console.error("SignalR connection ID is not available yet!");
-      return;
-    }
+    this.isConnecting = true; // লোডিং স্পিনার দেখান
+
+  const connectionsId = await this.signalrService.waitForConnectionId(); // সংযোগ ID পাওয়ার জন্য অপেক্ষা করুন
+  if (!connectionsId) {
+    console.error("SignalR connection ID is not available yet!");
+    this.isConnecting = false; // লোডিং স্পিনার লুকান
+    return;
+  }
+
+  this.isConnecting = false; // লোডিং স্পিনার লুকান
 
 
     const serverUpload = this.fileForm.get('serverUpload')?.value;

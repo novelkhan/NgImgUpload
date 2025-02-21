@@ -1,0 +1,8 @@
+{
+    "/uploadProgressHub": {
+      "target": "https://localhost:7258",
+      "secure": false,
+      "ws": true,
+      "changeOrigin": true
+    }
+  }

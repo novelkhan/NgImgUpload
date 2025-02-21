@@ -7,6 +7,7 @@ import { AddItemComponent } from './components/add-item/add-item.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AddComponent } from './components/add/add.component';
 import { EditItemComponent } from './components/edit-item/edit-item.component';
+import { ProgressBarComponent } from './components/progress-bar/progress-bar.component';
 
 
 @NgModule({
@@ -14,7 +15,8 @@ import { EditItemComponent } from './components/edit-item/edit-item.component';
     ItemComponent,
     AddItemComponent,
     AddComponent,
-    EditItemComponent
+    EditItemComponent,
+    ProgressBarComponent
   ],
   imports: [
     CommonModule,
