@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -19,12 +18,33 @@ export class SignalrService {
       return;
     }
   
-    this.hubConnection = new signalR.HubConnectionBuilder()
+    /* this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`https://localhost:7258/uploadProgressHub`, {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets
       })
-      .build();
+      .build(); */
+
+
+    /* this.hubConnection = new signalR.HubConnectionBuilder()
+    .withUrl(`https://localhost:7258/uploadProgressHub`, {
+      skipNegotiation: false, // Allow negotiation
+      transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling // Fallback to LongPolling
+    })
+    .withAutomaticReconnect() // Automatically retry connection
+    .build(); */
+
+    this.hubConnection = new signalR.HubConnectionBuilder()
+    .withUrl(`https://localhost:7258/uploadProgressHub`, {
+      skipNegotiation: true, // Allow negotiation
+      transport: signalR.HttpTransportType.WebSockets
+    })
+    .withAutomaticReconnect() // Automatically retry connection
+    .build();
+
+
+
+
   
     this.hubConnection.start()
       .then(() => {

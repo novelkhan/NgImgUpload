@@ -20,8 +20,6 @@
     </div>
 
 
-    
-
     <!-- Remote URL Section -->
     <div class="mb-3">
       <label for="remoteUrl" class="form-label">Or Enter Remote URL</label>
@@ -53,16 +51,19 @@
 
 
 
-    <!-- Upload Progress Bar -->
-    <div class="mb-3" *ngIf="showUploadProgress">
-      <h4>Upload Progress</h4>
-      <app-progress-bar [progress]="uploadProgress" [visible]="showUploadProgress"></app-progress-bar>
-    </div>
+    
 
     <!-- Download Progress Bar -->
     <div class="mb-3" *ngIf="showDownloadProgress">
       <h4>Download Progress</h4>
       <app-progress-bar [progress]="downloadProgress" [visible]="showDownloadProgress"></app-progress-bar>
+    </div>
+
+
+    <!-- Upload Progress Bar -->
+    <div class="mb-3" *ngIf="showUploadProgress">
+      <h4>Upload Progress</h4>
+      <app-progress-bar [progress]="uploadProgress" [visible]="showUploadProgress"></app-progress-bar>
     </div>
 
 
