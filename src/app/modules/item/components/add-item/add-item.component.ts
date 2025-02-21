@@ -86,14 +86,14 @@ export class AddItemComponent implements OnDestroy {
 
     this.isConnecting = true; // লোডিং স্পিনার দেখান
 
-  const connectionsId = await this.signalrService.waitForConnectionId(); // সংযোগ ID পাওয়ার জন্য অপেক্ষা করুন
-  if (!connectionsId) {
-    console.error("SignalR connection ID is not available yet!");
-    this.isConnecting = false; // লোডিং স্পিনার লুকান
-    return;
-  }
+    const connectionId = await this.signalrService.waitForConnectionId(); // সংযোগ ID পাওয়ার জন্য অপেক্ষা করুন
+    if (!connectionId) {
+      console.error("SignalR connection ID is not available yet!");
+      this.isConnecting = false; // লোডিং স্পিনার লুকান
+      return;
+    }
 
-  this.isConnecting = false; // লোডিং স্পিনার লুকান
+    this.isConnecting = false; // লোডিং স্পিনার লুকান
 
 
     const serverUpload = this.fileForm.get('serverUpload')?.value;
@@ -102,7 +102,7 @@ export class AddItemComponent implements OnDestroy {
     if (serverUpload) {
       // If server upload URL is provided, send the URL to the backend
       try {
-        const response = await firstValueFrom(this.itemService.uploadFromUrl(serverUpload, connectionsId));
+        const response = await firstValueFrom(this.itemService.uploadFromUrl(serverUpload, connectionId));
         console.log('Response:', response);
         this.router.navigateByUrl('/item');
       } catch (error) {
@@ -128,7 +128,7 @@ export class AddItemComponent implements OnDestroy {
         filetype: this.fileType,
         filesize: this.fileSize,
         filestring: this.base64String,
-        connectionId: connectionsId
+        connectionId: connectionId
       };
   
       this.addItemSubscription = this.itemService.addItem(item).subscribe({

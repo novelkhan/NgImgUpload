@@ -18,19 +18,23 @@ export class SignalrService {
       console.log("Connection is already established.");
       return;
     }
-
+  
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`https://localhost:7258/uploadProgressHub`, {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets
       })
       .build();
-
+  
     this.hubConnection.start()
       .then(() => {
         console.log("Connected to the SignalR hub");
-        this.connectionId = this.hubConnection.connectionId!;
-        console.log("Connection ID:", this.connectionId);
+  
+        // সংযোগ ID গ্রহণ করুন
+        this.hubConnection.on("ReceiveConnectionId", (connectionId: string) => {
+          this.connectionId = connectionId;
+          console.log("Connection ID:", this.connectionId);
+        });
       })
       .catch(err => console.error("Error while starting SignalR connection:", err));
   }
@@ -55,8 +59,14 @@ export class SignalrService {
     if (this.connectionId) {
       return this.connectionId;
     }
-
+  
+    // যদি সংযোগ ID না পাওয়া যায়, তাহলে নতুন করে সংযোগ স্থাপনের চেষ্টা করুন
     await this.hubConnection.start();
-    return this.connectionId;
+    return new Promise((resolve) => {
+      this.hubConnection.on("ReceiveConnectionId", (connectionId: string) => {
+        this.connectionId = connectionId;
+        resolve(connectionId);
+      });
+    });
   }
 }
