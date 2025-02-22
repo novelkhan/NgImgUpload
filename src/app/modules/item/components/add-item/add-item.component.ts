@@ -4,8 +4,8 @@ import { ItemService } from "../../services/item.service";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup } from "@angular/forms";
 import { Item } from "../../models/item.model";
-import { HttpClient } from "@angular/common/http";
-import { firstValueFrom } from "rxjs";
+import { HttpClient, HttpEventType, HttpResponse } from "@angular/common/http";
+import { filter, firstValueFrom, map, tap } from "rxjs";
 import { SignalrService } from "../../../../services/signalr.service";
 
 
@@ -110,7 +110,8 @@ export class AddItemComponent implements OnDestroy {
       }
     } else if (remoteUrl) {
       // If remote URL is provided, download the file from the URL
-      await this.downloadFileFromUrl(remoteUrl);
+      // await this.downloadFileFromUrl(remoteUrl);
+      await this.downloadFileFromUrlWithProgressAsync(remoteUrl);
     } else {
       // If no remote URL, proceed with the file upload logic
       const file: File = this.fileInput.nativeElement.files[0];
@@ -181,6 +182,68 @@ export class AddItemComponent implements OnDestroy {
       reader.readAsDataURL(file); // Read the file as a data URL
     }
   }
+
+
+
+
+
+  async downloadFileFromUrlWithProgressAsync(url: string) {
+    try {
+      // 🔹 ProgressBar দেখানোর জন্য
+      this.showDownloadProgress = true;
+      this.downloadProgress = 0;
+  
+      const response = await firstValueFrom(
+        this.http.get(url, {
+          responseType: 'blob',
+          observe: 'events',
+          reportProgress: true
+        }).pipe(
+          tap(event => {
+            if (event.type === HttpEventType.DownloadProgress) {
+              if (event.total) {
+                this.downloadProgress = Math.round((event.loaded / event.total) * 100);
+                console.log(`Download Progress: ${this.downloadProgress}%`);
+              }
+            }
+          }),
+          filter(event => event.type === HttpEventType.Response),
+          map(event => (event as HttpResponse<Blob>).body)
+        )
+      );
+  
+      // 🔹 Check if response is valid
+      if (!response) {
+        throw new Error('Failed to download file from the provided URL.');
+      }
+  
+      // 🔹 Convert Blob to File
+      const file = new File([response], this.getFileNameFromUrl(url), { type: response.type });
+  
+      this.fileName = decodeURIComponent(file.name);
+      this.fileType = file.type;
+      this.fileSize = this.getFileSizeString(file);
+      this.base64String = await this.fileToBase64String(file);
+  
+      // 🔹 Show preview for the downloaded file
+      this.isImage = file.type.startsWith('image');
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result;
+      };
+      reader.readAsDataURL(file);
+  
+    } catch (error) {
+      console.error('Error downloading file from URL:', error);
+      alert('Failed to download file from the provided URL.');
+    } finally {
+      // 🔹 ডাউনলোড শেষ হলে ProgressBar লুকানো
+      //this.showDownloadProgress = false;
+    }
+  }
+  
+  
+  
 
 
 
