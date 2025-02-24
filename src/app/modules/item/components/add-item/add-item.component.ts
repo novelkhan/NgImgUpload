@@ -38,8 +38,10 @@ export class AddItemComponent implements OnDestroy {
 
   uploadProgress: number = 0;
   downloadProgress: number = 0;
+  fromUrlDownloadProgress: number = 0;
   showUploadProgress: boolean = false;
   showDownloadProgress: boolean = false;
+  showFromUrlDownloadProgress: boolean = false;
 
 
   isConnecting: boolean = false;
@@ -112,6 +114,7 @@ export class AddItemComponent implements OnDestroy {
       // If remote URL is provided, download the file from the URL
       // await this.downloadFileFromUrl(remoteUrl);
       await this.downloadFileFromUrlWithProgressAsync(remoteUrl);
+      // await this.downloadFileFromUrlWithProgressAsync2(remoteUrl);
     } else {
       // If no remote URL, proceed with the file upload logic
       const file: File = this.fileInput.nativeElement.files[0];
@@ -186,12 +189,11 @@ export class AddItemComponent implements OnDestroy {
 
 
 
-
-  async downloadFileFromUrlWithProgressAsync(url: string) {
+  async downloadFileFromUrlWithProgressAsync2(url: string) {
     try {
       // 🔹 ProgressBar দেখানোর জন্য
-      this.showDownloadProgress = true;
-      this.downloadProgress = 0;
+      this.showFromUrlDownloadProgress = true;
+      this.fromUrlDownloadProgress = 0;
   
       const response = await firstValueFrom(
         this.http.get(url, {
@@ -202,8 +204,70 @@ export class AddItemComponent implements OnDestroy {
           tap(event => {
             if (event.type === HttpEventType.DownloadProgress) {
               if (event.total) {
-                this.downloadProgress = Math.round((event.loaded / event.total) * 100);
-                console.log(`Download Progress: ${this.downloadProgress}%`);
+                this.fromUrlDownloadProgress = Math.round((event.loaded / event.total) * 100);
+              } else {
+                // 🔹 যদি total = undefined হয়, তাহলে আনুমানিক প্রগ্রেস দেখানো
+                this.fromUrlDownloadProgress = Math.round((event.loaded / (1024 * 1024)) * 10); // MB হিসেবে গণনা
+              }
+              console.log(`Download Progress: ${this.fromUrlDownloadProgress}%`);
+            }
+          }),
+          filter(event => event.type === HttpEventType.Response),
+          map(event => (event as HttpResponse<Blob>).body)
+        )
+      );
+  
+      // 🔹 Check if response is valid
+      if (!response) {
+        throw new Error('Failed to download file from the provided URL.');
+      }
+  
+      // 🔹 Convert Blob to File
+      const file = new File([response], this.getFileNameFromUrl(url), { type: response.type });
+  
+      this.fileName = decodeURIComponent(file.name);
+      this.fileType = file.type;
+      this.fileSize = this.getFileSizeString(file);
+      this.base64String = await this.fileToBase64String(file);
+  
+      // 🔹 Show preview for the downloaded file
+      this.isImage = file.type.startsWith('image');
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result;
+      };
+      reader.readAsDataURL(file);
+  
+    } catch (error) {
+      console.error('Error downloading file from URL:', error);
+      alert('Failed to download file from the provided URL.');
+    } finally {
+      // 🔹 ডাউনলোড শেষ হলে ProgressBar লুকানো
+      //this.showFromUrlDownloadProgress = false;
+    }
+  }
+  
+
+
+
+
+  async downloadFileFromUrlWithProgressAsync(url: string) {
+    try {
+      // 🔹 ProgressBar দেখানোর জন্য
+      this.showFromUrlDownloadProgress = true;
+      this.fromUrlDownloadProgress = 0;
+  
+      const response = await firstValueFrom(
+        this.http.get(url, {
+          responseType: 'blob',
+          observe: 'events',
+          reportProgress: true
+        }).pipe(
+          tap(event => {
+            if (event.type === HttpEventType.DownloadProgress) {
+              if (event.total) {
+                this.fromUrlDownloadProgress = Math.round((event.loaded / event.total) * 100);
+                console.log(`Download Progress in Frontend: ${this.fromUrlDownloadProgress}%`);
               }
             }
           }),
@@ -238,7 +302,7 @@ export class AddItemComponent implements OnDestroy {
       alert('Failed to download file from the provided URL.');
     } finally {
       // 🔹 ডাউনলোড শেষ হলে ProgressBar লুকানো
-      //this.showDownloadProgress = false;
+      //this.showFromUrlDownloadProgress = false;
     }
   }
   

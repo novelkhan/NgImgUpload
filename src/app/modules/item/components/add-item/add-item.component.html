@@ -53,16 +53,23 @@
 
     
 
-    <!-- Download Progress Bar -->
+    <!-- Download Progress Bar For Url Upload In Backend -->
     <div class="mb-3" *ngIf="showDownloadProgress">
-      <h4>Download Progress</h4>
+      <h4>Download Progress From The URL In Backend</h4>
       <app-progress-bar [progress]="downloadProgress" [visible]="showDownloadProgress"></app-progress-bar>
+    </div>
+
+
+    <!-- Download Progress Bar For Url Upload In Frontend -->
+    <div class="mb-3" *ngIf="showFromUrlDownloadProgress">
+      <h4>Download Progress From The URL In Frontend</h4>
+      <app-progress-bar [progress]="fromUrlDownloadProgress" [visible]="showFromUrlDownloadProgress"></app-progress-bar>
     </div>
 
 
     <!-- Upload Progress Bar -->
     <div class="mb-3" *ngIf="showUploadProgress">
-      <h4>Upload Progress</h4>
+      <h4>Upload Progress Of The File To Database</h4>
       <app-progress-bar [progress]="uploadProgress" [visible]="showUploadProgress"></app-progress-bar>
     </div>
 
