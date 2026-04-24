@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 
 import { ChunkRoutingModule } from './chunk-routing.module';
 import { AddChunkedComponent } from './components/add-chunked/add-chunked.component';
+import { ChunkedComponent } from './components/chunked/chunked.component';
 
 
 @NgModule({
   declarations: [
-    AddChunkedComponent
+    AddChunkedComponent,
+    ChunkedComponent
   ],
   imports: [
     CommonModule,
