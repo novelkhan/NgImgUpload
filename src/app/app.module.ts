@@ -9,6 +9,7 @@ import { NotFoundComponent } from './components/not-found/not-found.component';
 import { HomeComponent } from './components/home/home.component';
 import { ItemModule } from './modules/item/item.module';
 import { PropModule } from './modules/prop/prop.module';
+import { ChunkModule } from './modules/chunk/chunk.module';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { PropModule } from './modules/prop/prop.module';
     PersonModule,
     ManModule,
     ItemModule,
-    PropModule
+    PropModule,
+    ChunkModule
   ],
   providers: [],
   bootstrap: [AppComponent]
