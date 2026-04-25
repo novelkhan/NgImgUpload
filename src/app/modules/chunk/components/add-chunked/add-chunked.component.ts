@@ -13,15 +13,12 @@ type TabType = 'file' | 'url-frontend' | 'url-backend';
 })
 export class AddChunkedComponent implements OnInit, OnDestroy {
 
-  // ===== Active Tab =====
   activeTab: TabType = 'file';
-
-  // ===== Chunk Config =====
   chunkSizeMB: number = 1;
   get chunkSizeBytes(): number { return this.chunkSizeMB * 1024 * 1024; }
 
   // ============================================================
-  // TAB 1: LOCAL FILE UPLOAD
+  // TAB 1: LOCAL FILE
   // ============================================================
   selectedFile: File | null = null;
   previewUrl: string | null = null;
@@ -36,7 +33,12 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   remainingSize: string = '0 KB';
   isDragging: boolean = false;
   currentStep: number = 1;
-  private uploadStartTime: number = 0;
+
+  // ✅ Duration tracking (Tab 1)
+  uploadStartTimeMs: number = 0;
+  uploadDurationMs: number = 0;
+  uploadDurationText: string = '';
+
   private uploadAborted: boolean = false;
 
   // ============================================================
@@ -54,6 +56,11 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   urlUploadId: string = '';
   urlErrorMessage: string = '';
 
+  // ✅ Duration tracking (Tab 2)
+  urlStartTimeMs: number = 0;
+  urlDurationMs: number = 0;
+  urlDurationText: string = '';
+
   // ============================================================
   // TAB 3: URL → BACKEND DIRECT
   // ============================================================
@@ -63,11 +70,15 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   backendUploadComplete: boolean = false;
   backendErrorMessage: string = '';
 
+  // ✅ Duration tracking (Tab 3)
+  backendStartTimeMs: number = 0;
+  backendDurationMs: number = 0;
+  backendDurationText: string = '';
+
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {}
 
-  // ===== Tab Switch =====
   switchTab(tab: TabType): void {
     this.activeTab = tab;
     this.errorMessage = '';
@@ -109,6 +120,8 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.uploadedChunks = 0;
     this.errorMessage = '';
     this.uploadId = this.generateUploadId();
+    this.uploadDurationMs = 0;
+    this.uploadDurationText = '';
     this.currentStep = 2;
 
     if (file.type.startsWith('image/')) {
@@ -129,6 +142,8 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.uploadedChunks = 0;
     this.errorMessage = '';
     this.uploadId = '';
+    this.uploadDurationMs = 0;
+    this.uploadDurationText = '';
     this.currentStep = 1;
   }
 
@@ -137,13 +152,17 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   async startChunkedUpload(): Promise<void> {
     if (!this.selectedFile || this.isUploading) return;
 
+    // ✅ Upload শুরুর সময় নিন
+    this.uploadStartTimeMs = Date.now();
+
     this.isUploading = true;
     this.uploadComplete = false;
     this.uploadProgress = 0;
     this.uploadedChunks = 0;
     this.errorMessage = '';
     this.uploadAborted = false;
-    this.uploadStartTime = Date.now();
+    this.uploadDurationMs = 0;
+    this.uploadDurationText = '';
     this.currentStep = 3;
 
     const file = this.selectedFile;
@@ -152,21 +171,64 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.uploadId = uploadId;
 
     try {
-      await this.initializeUpload(uploadId, file, totalChunks);
+      // Initialize — uploadMethod ও clientStartTimeMs পাঠান
+      await firstValueFrom(this.http.post(
+        `${environment.personApiBaseUrl}/chunkedupload/initialize`,
+        {
+          uploadId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          totalChunks,
+          chunkSize: this.chunkSizeBytes,
+          uploadMethod: 'LocalFile',              // ✅
+          clientStartTimeMs: this.uploadStartTimeMs  // ✅
+        }
+      ));
 
+      // Upload chunks
       for (let i = 0; i < totalChunks; i++) {
         if (this.uploadAborted) break;
+
         const start = i * this.chunkSizeBytes;
         const end = Math.min(start + this.chunkSizeBytes, file.size);
         const chunk = file.slice(start, end);
-        await this.uploadChunk(uploadId, i, totalChunks, chunk, file);
+
+        const formData = new FormData();
+        formData.append('uploadId', uploadId);
+        formData.append('chunkIndex', i.toString());
+        formData.append('totalChunks', totalChunks.toString());
+        formData.append('fileName', file.name);
+        formData.append('chunk', chunk, file.name);
+
+        await firstValueFrom(this.http.post(
+          `${environment.personApiBaseUrl}/chunkedupload/upload-chunk`, formData
+        ));
+
         this.uploadedChunks = i + 1;
         this.uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
         this.updateStats(end);
       }
 
       if (!this.uploadAborted) {
-        await this.finalizeUpload(uploadId, file, totalChunks);
+        // ✅ Finalize — uploadMethod ও clientStartTimeMs পাঠান
+        await firstValueFrom(this.http.post(
+          `${environment.personApiBaseUrl}/chunkedupload/finalize`,
+          {
+            uploadId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            totalChunks,
+            uploadMethod: 'LocalFile',              // ✅
+            clientStartTimeMs: this.uploadStartTimeMs  // ✅
+          }
+        ));
+
+        // ✅ Duration হিসাব করুন
+        this.uploadDurationMs = Date.now() - this.uploadStartTimeMs;
+        this.uploadDurationText = this.formatDuration(this.uploadDurationMs);
+
         this.uploadComplete = true;
         this.isUploading = false;
         this.uploadProgress = 100;
@@ -183,39 +245,13 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.uploadProgress = 0;
     this.uploadedChunks = 0;
+    this.uploadDurationMs = 0;
+    this.uploadDurationText = '';
     this.currentStep = 2;
   }
 
-  private initializeUpload(uploadId: string, file: File, totalChunks: number): Promise<any> {
-    return firstValueFrom(this.http.post(
-      `${environment.personApiBaseUrl}/chunkedupload/initialize`,
-      { uploadId, fileName: file.name, fileType: file.type, fileSize: file.size, totalChunks, chunkSize: this.chunkSizeBytes }
-    ));
-  }
-
-  private uploadChunk(uploadId: string, chunkIndex: number, totalChunks: number, chunk: Blob, file: File): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('uploadId', uploadId);
-      formData.append('chunkIndex', chunkIndex.toString());
-      formData.append('totalChunks', totalChunks.toString());
-      formData.append('fileName', file.name);
-      formData.append('chunk', chunk, file.name);
-
-      this.http.post(`${environment.personApiBaseUrl}/chunkedupload/upload-chunk`, formData)
-        .subscribe({ next: resolve, error: (err) => reject(new Error(`Chunk ${chunkIndex + 1} failed: ${err.message}`)) });
-    });
-  }
-
-  private finalizeUpload(uploadId: string, file: File, totalChunks: number): Promise<any> {
-    return firstValueFrom(this.http.post(
-      `${environment.personApiBaseUrl}/chunkedupload/finalize`,
-      { uploadId, fileName: file.name, fileType: file.type, fileSize: file.size, totalChunks }
-    ));
-  }
-
   private updateStats(uploadedBytes: number): void {
-    const elapsed = (Date.now() - this.uploadStartTime) / 1000;
+    const elapsed = (Date.now() - this.uploadStartTimeMs) / 1000;
     const speedBps = elapsed > 0 ? uploadedBytes / elapsed : 0;
     this.uploadSpeed = speedBps > 1024 * 1024
       ? (speedBps / (1024 * 1024)).toFixed(1) + ' MB/s'
@@ -229,13 +265,11 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   // TAB 2: URL → FRONTEND → CHUNKS
   // ============================================================
   onUrlInput(): void {
-    // Image preview for URL
     if (this.remoteUrl && this.isImageUrl(this.remoteUrl)) {
       this.urlPreviewUrl = this.remoteUrl;
     } else {
       this.urlPreviewUrl = null;
     }
-    // Reset if URL changed after download
     if (this.urlDownloadedFile) {
       this.urlDownloadedFile = null;
       this.urlDownloadProgress = 0;
@@ -243,6 +277,8 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
       this.urlUploadedChunks = 0;
       this.urlUploadComplete = false;
       this.urlUploadId = '';
+      this.urlDurationMs = 0;
+      this.urlDurationText = '';
     }
   }
 
@@ -256,6 +292,8 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.urlUploadComplete = false;
     this.urlErrorMessage = '';
     this.urlUploadId = '';
+    this.urlDurationMs = 0;
+    this.urlDurationText = '';
   }
 
   async downloadFromUrlFrontend(): Promise<void> {
@@ -278,11 +316,7 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
               if (event.total) {
                 this.urlDownloadProgress = Math.round((event.loaded / event.total) * 100);
               } else {
-                // total অজানা হলে estimate দেখাই
-                this.urlDownloadProgress = Math.min(
-                  99,
-                  Math.round((event.loaded / (1024 * 1024)) * 5)
-                );
+                this.urlDownloadProgress = Math.min(99, Math.round((event.loaded / (1024 * 1024)) * 5));
               }
             }
           }),
@@ -298,15 +332,13 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
       this.urlDownloadProgress = 100;
       this.urlUploadId = this.generateUploadId();
 
-      // Image preview from downloaded blob
       if (response.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = () => { this.urlPreviewUrl = reader.result as string; };
         reader.readAsDataURL(response);
       }
-
     } catch (error: any) {
-      this.urlErrorMessage = 'Download failed: ' + (error?.message || 'CORS or network error. Try Backend Direct mode.');
+      this.urlErrorMessage = 'Download failed: ' + (error?.message || 'CORS বা network error। Backend Direct mode ব্যবহার করুন।');
     } finally {
       this.urlDownloadInProgress = false;
     }
@@ -314,6 +346,9 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
 
   async uploadUrlFileAsChunks(): Promise<void> {
     if (!this.urlDownloadedFile || this.urlUploadInProgress) return;
+
+    // ✅ Upload শুরুর সময় নিন
+    this.urlStartTimeMs = Date.now();
 
     const file = this.urlDownloadedFile;
     const totalChunks = this.getTotalChunksFromFile(file);
@@ -324,12 +359,23 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     this.urlUploadProgress = 0;
     this.urlUploadedChunks = 0;
     this.urlErrorMessage = '';
+    this.urlDurationMs = 0;
+    this.urlDurationText = '';
 
     try {
       // Initialize
       await firstValueFrom(this.http.post(
         `${environment.personApiBaseUrl}/chunkedupload/initialize`,
-        { uploadId, fileName: file.name, fileType: file.type, fileSize: file.size, totalChunks, chunkSize: this.chunkSizeBytes }
+        {
+          uploadId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          totalChunks,
+          chunkSize: this.chunkSizeBytes,
+          uploadMethod: 'UrlFrontend',         // ✅
+          clientStartTimeMs: this.urlStartTimeMs  // ✅
+        }
       ));
 
       // Upload chunks
@@ -353,11 +399,23 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
         this.urlUploadProgress = Math.round(((i + 1) / totalChunks) * 100);
       }
 
-      // Finalize
+      // ✅ Finalize — uploadMethod ও clientStartTimeMs পাঠান
       await firstValueFrom(this.http.post(
         `${environment.personApiBaseUrl}/chunkedupload/finalize`,
-        { uploadId, fileName: file.name, fileType: file.type, fileSize: file.size, totalChunks }
+        {
+          uploadId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          totalChunks,
+          uploadMethod: 'UrlFrontend',         // ✅
+          clientStartTimeMs: this.urlStartTimeMs  // ✅
+        }
       ));
+
+      // ✅ Duration
+      this.urlDurationMs = Date.now() - this.urlStartTimeMs;
+      this.urlDurationText = this.formatDuration(this.urlDurationMs);
 
       this.urlUploadComplete = true;
       this.urlUploadProgress = 100;
@@ -375,13 +433,16 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   async uploadFromUrlBackend(): Promise<void> {
     if (!this.backendUrl || this.backendDownloadInProgress) return;
 
+    // ✅ শুরুর সময় নিন
+    this.backendStartTimeMs = Date.now();
+
     this.backendDownloadInProgress = true;
     this.backendDownloadProgress = 0;
     this.backendUploadComplete = false;
     this.backendErrorMessage = '';
+    this.backendDurationMs = 0;
+    this.backendDurationText = '';
 
-    // Progress simulation (server এ actual progress SignalR দিয়ে পাওয়া যায়,
-    // এখানে polling দিয়ে simulate করছি)
     const progressInterval = setInterval(() => {
       if (this.backendDownloadProgress < 90) {
         this.backendDownloadProgress += Math.floor(Math.random() * 8) + 2;
@@ -392,12 +453,21 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
       await firstValueFrom(
         this.http.post(
           `${environment.personApiBaseUrl}/chunkedupload/upload-from-url`,
-          { url: this.backendUrl }
+          {
+            url: this.backendUrl,
+            uploadMethod: 'UrlBackend',               // ✅
+            clientStartTimeMs: this.backendStartTimeMs // ✅
+          }
         )
       );
 
       clearInterval(progressInterval);
       this.backendDownloadProgress = 100;
+
+      // ✅ Duration
+      this.backendDurationMs = Date.now() - this.backendStartTimeMs;
+      this.backendDurationText = this.formatDuration(this.backendDurationMs);
+
       this.backendUploadComplete = true;
 
     } catch (error: any) {
@@ -406,6 +476,11 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     } finally {
       this.backendDownloadInProgress = false;
     }
+  }
+
+  onBackendImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) img.style.display = 'none';
   }
 
   // ============================================================
@@ -441,9 +516,7 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
   isImageUrl(url: string): boolean {
     if (!url) return false;
     const lower = url.toLowerCase().split('?')[0];
-    return lower.endsWith('.jpg') || lower.endsWith('.jpeg') ||
-           lower.endsWith('.png') || lower.endsWith('.gif') ||
-           lower.endsWith('.webp') || lower.endsWith('.svg');
+    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].some(ext => lower.endsWith(ext));
   }
 
   private getFileNameFromUrl(url: string): string {
@@ -464,17 +537,26 @@ export class AddChunkedComponent implements OnInit, OnDestroy {
     return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   }
 
+  // ✅ Duration format করুন
+  formatDuration(ms: number): string {
+    if (ms <= 0) return '—';
+    if (ms < 1000) return `${ms}ms`;
+    const totalSeconds = ms / 1000;
+    if (totalSeconds < 60) return `${Math.round(totalSeconds * 10) / 10}s`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    if (minutes < 60) return `${minutes}m ${seconds}s`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m ${seconds}s`;
+  }
+
   private generateUploadId(): string {
     return 'upload-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
   }
 
   goToList(): void {
     this.router.navigateByUrl('/chunk');
-  }
-
-  onBackendImgError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img) img.style.display = 'none';
   }
 
   ngOnDestroy(): void {

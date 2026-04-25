@@ -73,7 +73,7 @@ export class ChunkedComponent implements OnInit {
     });
   }
 
-  // ===== Helpers =====
+  // ===== Stats =====
   getTotalSize(): string {
     const totalBytes = this.chunkedFiles.reduce((acc, f) => acc + (f.rawFileSize || 0), 0);
     if (totalBytes === 0) return '—';
@@ -81,10 +81,49 @@ export class ChunkedComponent implements OnInit {
     return (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
-  getUniqueTypes(): number {
-    return new Set(this.chunkedFiles.map(f => f.filetype?.split('/')[0])).size;
+  getAvgDuration(): string {
+    const files = this.chunkedFiles.filter(f => f.uploadDurationMs > 0);
+    if (files.length === 0) return '—';
+    const avgMs = files.reduce((acc, f) => acc + f.uploadDurationMs, 0) / files.length;
+    return this.formatDuration(avgMs);
   }
 
+  getUniqueMethodCount(): number {
+    return new Set(this.chunkedFiles.map(f => f.uploadMethod).filter(Boolean)).size;
+  }
+
+  // ===== Upload Method =====
+  // ✅ Method label — বাংলায় বোঝার জন্য সহজ label
+  getMethodLabel(method: string): string {
+    switch (method) {
+      case 'LocalFile':    return 'Local File';
+      case 'UrlFrontend':  return 'URL → Frontend';
+      case 'UrlBackend':   return 'URL → Backend';
+      default:             return method || 'Unknown';
+    }
+  }
+
+  // ✅ Method এর জন্য CSS class
+  getMethodClass(method: string): string {
+    switch (method) {
+      case 'LocalFile':    return 'method-badge method-badge--local';
+      case 'UrlFrontend':  return 'method-badge method-badge--frontend';
+      case 'UrlBackend':   return 'method-badge method-badge--backend';
+      default:             return 'method-badge';
+    }
+  }
+
+  // ✅ Method icon (emoji)
+  getMethodIcon(method: string): string {
+    switch (method) {
+      case 'LocalFile':    return '📁';
+      case 'UrlFrontend':  return '🌐';
+      case 'UrlBackend':   return '⚙️';
+      default:             return '📦';
+    }
+  }
+
+  // ===== File Helpers =====
   getExtension(filename: string): string {
     return filename?.split('.').pop()?.toUpperCase().substring(0, 4) || 'FILE';
   }
@@ -94,7 +133,7 @@ export class ChunkedComponent implements OnInit {
     if (filetype.startsWith('image')) return 'type-image';
     if (filetype.startsWith('video')) return 'type-video';
     if (filetype.startsWith('audio')) return 'type-audio';
-    if (filetype.includes('pdf')) return 'type-pdf';
+    if (filetype.includes('pdf'))     return 'type-pdf';
     if (filetype.includes('word') || filetype.includes('doc')) return 'type-doc';
     return 'type-default';
   }
@@ -104,13 +143,25 @@ export class ChunkedComponent implements OnInit {
   }
 
   getImageSrc(file: any): string {
-    if (file.filestring) {
-      return `data:${file.filetype};base64,${file.filestring}`;
-    }
+    if (file.filestring) return `data:${file.filetype};base64,${file.filestring}`;
     return '';
   }
 
   onImgError(event: any): void {
     event.target.style.display = 'none';
+  }
+
+  // ===== Duration Formatter =====
+  private formatDuration(ms: number): string {
+    if (ms <= 0) return '—';
+    if (ms < 1000) return `${Math.round(ms)}ms`;
+    const totalSeconds = ms / 1000;
+    if (totalSeconds < 60) return `${Math.round(totalSeconds * 10) / 10}s`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    if (minutes < 60) return `${minutes}m ${seconds}s`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m ${seconds}s`;
   }
 }

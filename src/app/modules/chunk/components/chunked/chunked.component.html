@@ -47,12 +47,12 @@
       <span class="stat-lbl">Total Size</span>
     </div>
     <div class="stat-card">
-      <span class="stat-num">{{ getUniqueTypes() }}</span>
-      <span class="stat-lbl">File Types</span>
+      <span class="stat-num">{{ getAvgDuration() }}</span>
+      <span class="stat-lbl">Avg Upload Time</span>
     </div>
     <div class="stat-card stat-card--highlight">
-      <span class="stat-num">Chunked</span>
-      <span class="stat-lbl">Upload Method</span>
+      <span class="stat-num">{{ getUniqueMethodCount() }}</span>
+      <span class="stat-lbl">Upload Methods Used</span>
     </div>
   </div>
 </div>
@@ -99,33 +99,52 @@
           </div>
         </div>
         <div class="card-actions-top">
-          <button class="icon-btn icon-btn--download" title="Download"
-                  (click)="downloadFile(file)">
+          <button class="icon-btn icon-btn--download" title="Download" (click)="downloadFile(file)">
             <svg viewBox="0 0 18 18" fill="none"><path d="M9 3v9M5 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
-          <button class="icon-btn icon-btn--delete" title="Delete"
-                  (click)="deleteFile(file.id)">
+          <button class="icon-btn icon-btn--delete" title="Delete" (click)="deleteFile(file.id)">
             <svg viewBox="0 0 18 18" fill="none"><path d="M3 5h12M7 5V3h4v2M6 5v9a1 1 0 001 1h4a1 1 0 001-1V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- Image Preview if image -->
+      <!-- Image Preview -->
       <div class="card-preview" *ngIf="isImageType(file.filetype)">
-        <img [src]="getImageSrc(file)" [alt]="file.filename" class="preview-thumb"
-             (error)="onImgError($event)">
+        <img [src]="getImageSrc(file)" [alt]="file.filename" class="preview-thumb" (error)="onImgError($event)">
       </div>
 
       <!-- Card Body -->
       <div class="card-body">
         <div class="card-filename" [title]="file.filename">{{ file.filename }}</div>
+
         <div class="card-meta">
           <span class="meta-tag">{{ file.filetype }}</span>
           <span class="meta-tag meta-tag--size">{{ file.filesize }}</span>
         </div>
+
+        <!-- ✅ Upload Method Badge -->
+        <div class="method-badge" [class]="getMethodClass(file.uploadMethod)">
+          <span class="method-icon">{{ getMethodIcon(file.uploadMethod) }}</span>
+          {{ getMethodLabel(file.uploadMethod) }}
+        </div>
+
+        <!-- ✅ Upload Info Row -->
+        <div class="upload-info-row">
+          <!-- Uploaded At -->
+          <div class="upload-info-item">
+            <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4.5V7.5l1.5 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>{{ file.uploadedAt }}</span>
+          </div>
+          <!-- Duration -->
+          <div class="upload-info-item upload-info-item--duration">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v2M7 10v2M2 7h2M10 7h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/></svg>
+            <span>{{ file.uploadDuration }}</span>
+          </div>
+        </div>
+
         <div class="card-chunk-info">
           <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="5" height="4" rx="1" fill="currentColor" opacity="0.6"/><rect x="7" y="4" width="5" height="4" rx="1" fill="currentColor" opacity="0.8"/><rect x="1" y="9" width="3" height="4" rx="1" fill="currentColor" opacity="0.4"/><rect x="13" y="4" width="2" height="4" rx="1" fill="currentColor" opacity="0.5"/></svg>
-          Uploaded via {{ file.totalChunks || '?' }} chunks
+          {{ file.totalChunks }} chunk{{ file.totalChunks > 1 ? 's' : '' }}
         </div>
       </div>
 
@@ -149,7 +168,7 @@
       <svg viewBox="0 0 20 20" fill="none" width="16" height="16"><rect width="20" height="20" rx="5" fill="url(#fg2)"/><rect x="4" y="6" width="5" height="2" rx="1" fill="#fff" opacity="0.9"/><rect x="4" y="9" width="8" height="2" rx="1" fill="#fff" opacity="0.7"/><rect x="4" y="12" width="6" height="2" rx="1" fill="#fff" opacity="0.5"/><defs><linearGradient id="fg2" x1="0" y1="0" x2="20" y2="20"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#3ECFCF"/></linearGradient></defs></svg>
       Chunked Upload System
     </span>
-    <span class="footer-mid">Chunk-by-Chunk file transfer — Maximum reliability</span>
+    <span class="footer-mid">Upload method &amp; duration tracked per file</span>
     <span class="footer-copy">&copy; 2024 Novel Khan</span>
   </div>
 </footer>
