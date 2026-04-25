@@ -18,6 +18,7 @@ const routes: Routes = [
   {path:'item', loadChildren: () => import('./modules/item/item.module').then(module => module.ItemModule)},
   // Implementing lazy loading for Prop module by following format
   {path:'prop', loadChildren: () => import('./modules/prop/prop.module').then(module => module.PropModule)},
+  {path:'chunk', loadChildren: () => import('./modules/chunk/chunk.module').then(module => module.ChunkModule)},
   {path: 'not-found', component: NotFoundComponent},
   {path: '**', component: NotFoundComponent, pathMatch: 'full'}
 ];
