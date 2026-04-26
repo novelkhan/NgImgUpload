@@ -11,27 +11,53 @@ import { environment } from '../../../../../environments/environment.development
 export class ChunkedComponent implements OnInit {
 
   chunkedFiles: any[] = [];
-  isLoading: boolean = true;
+  isLoading = true;
 
   constructor(
     private chunkedUploadService: ChunkedUploadService,
     private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
-    this.loadFiles();
-  }
+  ngOnInit(): void { this.loadFiles(); }
 
   loadFiles(): void {
     this.isLoading = true;
     this.chunkedUploadService.getAllFiles().subscribe({
       next: (files) => {
-        this.chunkedFiles = files;
+        // ✅ switching flag যোগ করুন প্রতিটি file এ
+        this.chunkedFiles = files.map((f: any) => ({ ...f, switching: false }));
         this.isLoading = false;
       },
+      error: (err) => { console.error(err); this.isLoading = false; }
+    });
+  }
+
+  // ✅ Storage Switch — এক ক্লিকে Folder ↔ Database
+  switchStorage(file: any): void {
+    if (file.switching) return;
+
+    const target = file.storageType === 'Folder' ? 'Database' : 'Folder';
+    const confirmMsg = `Move "${file.filename}" from ${file.storageType} to ${target}?`;
+    if (!confirm(confirmMsg)) return;
+
+    file.switching = true;
+
+    this.http.post<any>(
+      `${environment.personApiBaseUrl}/chunkedupload/switch-storage/${file.id}`,
+      { targetStorage: target }
+    ).subscribe({
+      next: (res) => {
+        // ✅ Local state আপডেট করুন — পেজ reload ছাড়াই
+        file.previousStorageType = res.previousStorage;
+        file.storageType = res.currentStorage;
+        file.storageSwitchedAt = res.switchedAt;
+        file.switching = false;
+        console.log(`[StorageSwitch] ${res.message}`);
+      },
       error: (err) => {
-        console.error('Error loading files:', err);
-        this.isLoading = false;
+        console.error('Storage switch failed:', err);
+        alert('Storage switch failed: ' + (err?.error?.message || err?.message || 'Unknown error'));
+        file.switching = false;
       }
     });
   }
@@ -52,9 +78,7 @@ export class ChunkedComponent implements OnInit {
   deleteFile(id: number): void {
     if (!confirm('Delete this file?')) return;
     this.chunkedUploadService.deleteFile(id).subscribe({
-      next: () => {
-        this.chunkedFiles = this.chunkedFiles.filter(f => f.id !== id);
-      },
+      next: () => { this.chunkedFiles = this.chunkedFiles.filter(f => f.id !== id); },
       error: (err) => console.error('Delete error:', err)
     });
   }
@@ -65,9 +89,8 @@ export class ChunkedComponent implements OnInit {
     ).subscribe({
       next: (res) => {
         alert(`Download Link:\n${res.downloadLink}`);
-        navigator.clipboard.writeText(res.downloadLink).then(() =>
-          alert('Link copied to clipboard!')
-        );
+        navigator.clipboard.writeText(res.downloadLink)
+          .then(() => alert('Link copied to clipboard!'));
       },
       error: (err) => console.error(err)
     });
@@ -75,52 +98,46 @@ export class ChunkedComponent implements OnInit {
 
   // ===== Stats =====
   getTotalSize(): string {
-    const totalBytes = this.chunkedFiles.reduce((acc, f) => acc + (f.rawFileSize || 0), 0);
-    if (totalBytes === 0) return '—';
-    if (totalBytes < 1024 * 1024) return (totalBytes / 1024).toFixed(1) + ' KB';
-    return (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
+    const total = this.chunkedFiles.reduce((a, f) => a + (f.rawFileSize || 0), 0);
+    if (total === 0) return '—';
+    if (total < 1024 * 1024) return (total / 1024).toFixed(1) + ' KB';
+    return (total / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
-  getAvgDuration(): string {
-    const files = this.chunkedFiles.filter(f => f.uploadDurationMs > 0);
-    if (files.length === 0) return '—';
-    const avgMs = files.reduce((acc, f) => acc + f.uploadDurationMs, 0) / files.length;
-    return this.formatDuration(avgMs);
+  getFolderCount(): number {
+    return this.chunkedFiles.filter(f => f.storageType === 'Folder').length;
   }
 
-  getUniqueMethodCount(): number {
-    return new Set(this.chunkedFiles.map(f => f.uploadMethod).filter(Boolean)).size;
+  getDatabaseCount(): number {
+    return this.chunkedFiles.filter(f => f.storageType === 'Database').length;
   }
 
   // ===== Upload Method =====
-  // ✅ Method label — বাংলায় বোঝার জন্য সহজ label
   getMethodLabel(method: string): string {
-    switch (method) {
-      case 'LocalFile':    return 'Local File';
-      case 'UrlFrontend':  return 'URL → Frontend';
-      case 'UrlBackend':   return 'URL → Backend';
-      default:             return method || 'Unknown';
-    }
+    const map: Record<string, string> = {
+      LocalFile: 'Local File',
+      UrlFrontend: 'URL → Frontend',
+      UrlBackend: 'URL → Backend'
+    };
+    return map[method] || method || 'Unknown';
   }
 
-  // ✅ Method এর জন্য CSS class
   getMethodClass(method: string): string {
-    switch (method) {
-      case 'LocalFile':    return 'method-badge method-badge--local';
-      case 'UrlFrontend':  return 'method-badge method-badge--frontend';
-      case 'UrlBackend':   return 'method-badge method-badge--backend';
-      default:             return 'method-badge';
-    }
+    const map: Record<string, string> = {
+      LocalFile: 'method-badge method-badge--local',
+      UrlFrontend: 'method-badge method-badge--frontend',
+      UrlBackend: 'method-badge method-badge--backend'
+    };
+    return map[method] || 'method-badge';
   }
 
-  // ✅ Method icon (emoji)
   getMethodIcon(method: string): string {
-    switch (method) {
-      case 'LocalFile':    return '📁';
-      case 'UrlFrontend':  return '🌐';
-      case 'UrlBackend':   return '⚙️';
-      default:             return '📦';
-    }
+    const map: Record<string, string> = {
+      LocalFile: '📁',
+      UrlFrontend: '🌐',
+      UrlBackend: '⚙️'
+    };
+    return map[method] || '📦';
   }
 
   // ===== File Helpers =====
@@ -133,7 +150,7 @@ export class ChunkedComponent implements OnInit {
     if (filetype.startsWith('image')) return 'type-image';
     if (filetype.startsWith('video')) return 'type-video';
     if (filetype.startsWith('audio')) return 'type-audio';
-    if (filetype.includes('pdf'))     return 'type-pdf';
+    if (filetype.includes('pdf')) return 'type-pdf';
     if (filetype.includes('word') || filetype.includes('doc')) return 'type-doc';
     return 'type-default';
   }
@@ -149,19 +166,5 @@ export class ChunkedComponent implements OnInit {
 
   onImgError(event: any): void {
     event.target.style.display = 'none';
-  }
-
-  // ===== Duration Formatter =====
-  private formatDuration(ms: number): string {
-    if (ms <= 0) return '—';
-    if (ms < 1000) return `${Math.round(ms)}ms`;
-    const totalSeconds = ms / 1000;
-    if (totalSeconds < 60) return `${Math.round(totalSeconds * 10) / 10}s`;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.floor(totalSeconds % 60);
-    if (minutes < 60) return `${minutes}m ${seconds}s`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m ${seconds}s`;
   }
 }

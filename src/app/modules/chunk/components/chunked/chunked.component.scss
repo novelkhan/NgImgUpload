@@ -637,3 +637,144 @@
     color: var(--primary-light);
   }
 }
+
+
+
+/* ===================================================
+   chunked.component.scss এ যোগ করুন
+   =================================================== */
+
+/* ===== STORAGE ROW ===== */
+.storage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* ===== STORAGE BADGE ===== */
+.storage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+
+  span { display: flex; align-items: center; gap: 5px; }
+  svg { width: 12px; height: 12px; }
+
+  &--folder {
+    background: rgba(62,207,207,0.1);
+    border: 1px solid rgba(62,207,207,0.25);
+    color: var(--secondary);
+  }
+
+  &--db {
+    background: rgba(108,99,255,0.1);
+    border: 1px solid rgba(108,99,255,0.25);
+    color: var(--primary-light);
+  }
+}
+
+/* ===== SWITCH BUTTON ===== */
+.switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+
+  svg { width: 13px; height: 13px; }
+
+  &--to-db {
+    background: rgba(108,99,255,0.1);
+    border-color: rgba(108,99,255,0.25);
+    color: var(--primary-light);
+
+    &:hover:not(:disabled) {
+      background: rgba(108,99,255,0.2);
+      border-color: var(--primary);
+      transform: translateX(2px);
+    }
+  }
+
+  &--to-folder {
+    background: rgba(62,207,207,0.1);
+    border-color: rgba(62,207,207,0.25);
+    color: var(--secondary);
+
+    &:hover:not(:disabled) {
+      background: rgba(62,207,207,0.2);
+      border-color: var(--secondary);
+      transform: translateX(-2px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
+.switch-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== SWITCH HISTORY ===== */
+.switch-history {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  line-height: 1.5;
+
+  svg { width: 12px; height: 12px; flex-shrink: 0; margin-top: 1px; }
+
+  strong {
+    color: var(--primary-light);
+    font-weight: 600;
+  }
+}
+
+/* ===== METHOD BADGE (আগের থেকে copy, না থাকলে যোগ করুন) ===== */
+.method-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 8px; padding: 5px 12px;
+  font-family: var(--font-body); font-size: 11px;
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; margin-bottom: 12px;
+  .method-icon { font-size: 13px; }
+  &--local    { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25); color: var(--primary-light); }
+  &--frontend { background: rgba(62,207,207,0.1);  border: 1px solid rgba(62,207,207,0.25);  color: var(--secondary); }
+  &--backend  { background: rgba(255,107,157,0.1); border: 1px solid rgba(255,107,157,0.25); color: #FF6B9D; }
+}
+
+/* ===== UPLOAD INFO ROW ===== */
+.upload-info-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.upload-info-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  svg { width: 12px; height: 12px; flex-shrink: 0; }
+  &--duration { color: var(--primary-light); svg { color: var(--primary-light); } }
+}
